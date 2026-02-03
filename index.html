@@ -1,31 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lyons Industries | Factory Jobs in Dowagiac, Michigan</title>
-  <meta name="description" content="Join Lyons Industries for entry-level factory jobs with competitive wages, great benefits, and a family-oriented team. Now hiring in Dowagiac, MI."/>
-  <link rel="stylesheet" href="css/styles.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyons Industries – Factory Jobs</title>
+  <meta name="description" content="Entry-level factory jobs in Dowagiac, MI – great pay, benefits, no experience needed.">
+  <style>
+    :root {
+      --primary: #004080;
+      --secondary: #0066cc;
+      --light: #f8f9fa;
+      --dark: #333;
+      --alt: #f0f4ff;
+      --overlay: rgba(0,0,80,0.65);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--light);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    /* Top bar */
+    .top-bar {
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 0.6rem 0;
+      font-size: 0.95rem;
+    }
+    .top-bar a { color: white; font-weight: 600; text-decoration: none; }
+    .top-bar a:hover { text-decoration: underline; }
+
+    /* Header */
+    header {
+      background: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #ddd;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      padding: 1.25rem 0;
+    }
+    header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .logo { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+    nav ul { display: flex; list-style: none; gap: 1.5rem; }
+    nav a { color: var(--dark); text-decoration: none; font-weight: 500; }
+    nav a:hover { color: var(--secondary); }
+
+    /* Parallax Video Hero */
+    .hero {
+      position: relative;
+      height: 85vh;
+      min-height: 580px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      perspective: 8px;
+      color: white;
+      text-align: center;
+    }
+    .video-wrap {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      z-index: -1;
+    }
+    .hero-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: translateZ(-3px) scale(1.18);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--overlay);
+      z-index: -1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 820px;
+      padding: 2rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6.5vw, 3.6rem);
+      margin-bottom: 1rem;
+      text-shadow: 0 3px 12px #0009;
+    }
+    .hero p {
+      font-size: clamp(1.1rem, 3vw, 1.35rem);
+      max-width: 700px;
+      margin: 0 auto 2rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 2rem;
+      margin: 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+    .btn-primary { background: var(--secondary); color: white; }
+    .btn-primary:hover { background: #0055aa; }
+    .btn-outline {
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Sections */
+    section { padding: 5rem 0; }
+    h2 {
+      text-align: center;
+      font-size: 2.4rem;
+      margin-bottom: 2.5rem;
+      color: var(--primary);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+      text-align: center;
+    }
+    .card h3 { color: var(--primary); margin-bottom: 1rem; }
+    .highlight { font-weight: 600; color: var(--secondary); margin: 1rem 0; }
+    .alt-bg { background: var(--alt); }
+
+    /* Footer */
+    footer {
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 4rem 0 2rem;
+    }
+    footer a { color: #a5d8ff; }
+    .contact-info { margin: 1.5rem 0; font-size: 1.1rem; }
+    .small { font-size: 0.9rem; opacity: 0.9; margin-top: 2rem; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav ul { flex-direction: column; gap: 1rem; margin-top: 1rem; }
+      .hero { height: 70vh; perspective: 4px; }
+      .hero-video { transform: translateZ(-2px) scale(1.12); }
+      .hero h1 { font-size: 2.4rem; }
+      h2 { font-size: 2rem; }
+    }
+    @media (max-width: 480px) {
+      .container { padding: 0 1rem; }
+      .btn { padding: 0.8rem 1.6rem; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Top contact bar -->
   <div class="top-bar">
     <div class="container">
-      Customer Service: <a href="tel:8004589036">(800) 458-9036</a>  • 
+      Customer Service: <a href="tel:8004589036">(800) 458-9036</a> • 
       HR / Applicants: <a href="tel:2698690161">(269) 869-0161</a> (se habla español)
     </div>
   </div>
 
-  <!-- Header / Nav -->
   <header>
     <div class="container">
       <div class="logo">Lyons Industries</div>
       <nav>
         <ul>
-          <li><a href="#who-we-are">Who We Are</a></li>
-          <li><a href="#testimonials">Testimonials</a></li>
-          <li><a href="#jobs">Job Openings</a></li>
+          <li><a href="#who">Who We Are</a></li>
+          <li><a href="#jobs">Jobs</a></li>
           <li><a href="#benefits">Benefits</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
@@ -33,120 +207,68 @@
     </div>
   </header>
 
-<section class="hero-parallax">
-  <div class="parallax-wrap">
-    <video class="hero-video" autoplay muted loop playsinline poster="images/placeholder.jpg">  <!-- or your JPG -->
-      <source src="https://raw.githubusercontent.com/johnsmith5710/johnsmith5710.github.io/main/videos/hero-video.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-  </div>
+  <section class="hero">
+    <div class="video-wrap">
+      <video class="hero-video" autoplay muted loop playsinline poster="https://github.com/labcesi-strasbourg/labcesi-strasbourg.github.io/raw/master/V0050069.jpg">
+        <source src="https://raw.githubusercontent.com/johnsmith5710/johnsmith5710.github.io/main/videos/hero-video.mp4" type="video/mp4">
+        Your browser does not support video.
+      </video>
+    </div>
+    <div class="hero-content">
+      <h1>Factory Jobs in Dowagiac, Michigan</h1>
+      <p>Entry-level • Competitive wages • Excellent benefits • No experience required – we train</p>
+      <a href="#jobs" class="btn btn-primary">View Openings</a>
+      <a href="#contact" class="btn btn-outline">Contact Us</a>
+    </div>
+  </section>
 
-  <div class="hero-content container">
-    <h1>Apply for Factory Jobs in Dowagiac, Michigan</h1>
-    <p>Entry-level manufacturing positions • Competitive wages • Excellent benefits • No experience required</p>
-    <a href="#jobs" class="btn">View Job Openings</a>
-    <a href="#contact" class="btn btn-outline">Contact Us Today</a>
-  </div>
-</section>
-
-  <div class="hero-content container">
-    <h1>Apply for Factory Jobs in Dowagiac, Michigan</h1>
-    <p>Entry-level manufacturing positions • Competitive wages • Excellent benefits • Family-oriented team • No experience required — we train!</p>
-    <a href="#jobs" class="btn">View Job Openings</a>
-    <a href="#contact" class="btn btn-outline">Contact Us Today</a>
-  </div>
-</section>
-
-  <!-- Who We Are -->
-  <section id="who-we-are">
+  <section id="who">
     <div class="container">
       <h2>Who We Are</h2>
       <div class="card">
-        <p>We’re a family-owned and family-oriented company that’s been in business for over 50 years. We’re deeply committed to supporting the Dowagiac community and providing a respectful, hard-working environment where team members are truly valued.</p>
-        <p><a href="#" class="link-more">Learn More →</a></p>
+        <p>Family-owned for over 50 years. Committed to the Dowagiac community and treating every team member with respect.</p>
       </div>
     </div>
   </section>
 
-  <!-- Testimonials / Award -->
-  <section id="testimonials" class="alt-bg">
-    <div class="container">
-      <h2>What Our Team Says</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>2022 Michigan Works! Employer of the Year</h3>
-          <p>Proud recipient of this prestigious award — because our people come first.</p>
-        </div>
-        <div class="card">
-          <h3>Hardworking & Respectful Team</h3>
-          <p>Our employees tell us every day how much they appreciate the culture and support here at Lyons.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Job Openings -->
-  <section id="jobs">
+  <section id="jobs" class="alt-bg">
     <div class="container">
       <h2>Job Openings</h2>
       <div class="card">
-        <h3>Entry-Level Factory Positions – Dowagiac, MI</h3>
-        <p>We’re hiring hardworking people for manufacturing roles. No prior experience needed — full training provided.</p>
-        <p class="highlight">1st Shift: ~$19/hr • 2nd Shift: ~$21/hr (plus shift premium)</p>
-        <p><a href="#" class="btn">Apply Now</a></p>
+        <h3>Entry-Level Manufacturing – Dowagiac, MI</h3>
+        <p class="highlight">1st Shift ~$19/hr • 2nd Shift ~$21/hr + premium</p>
+        <p>No experience needed – full training provided.</p>
+        <a href="#" class="btn btn-primary">Apply Now</a>
       </div>
     </div>
   </section>
 
-  <!-- Benefits -->
-  <section id="benefits" class="alt-bg">
+  <section id="benefits">
     <div class="container">
-      <h2>Great Benefits Package</h2>
+      <h2>Our Benefits</h2>
       <div class="grid">
-        <div class="card">
-          <h3>Profit Sharing</h3>
-          <p>Share in the success you help create.</p>
-        </div>
-        <div class="card">
-          <h3>401(k)</h3>
-          <p>Build your future with our retirement plan.</p>
-        </div>
-        <div class="card">
-          <h3>Medical, Dental & Vision</h3>
-          <p>Competitive insurance options from day one.</p>
-        </div>
-        <div class="card">
-          <h3>Paid Time Off</h3>
-          <p>Available starting your first day.</p>
-        </div>
-        <div class="card">
-          <h3>Success Coach</h3>
-          <p>Free personal & professional guidance.</p>
-        </div>
+        <div class="card"><h3>Profit Sharing</h3><p>Share in the success</p></div>
+        <div class="card"><h3>401(k)</h3><p>Retirement plan</p></div>
+        <div class="card"><h3>Medical / Dental / Vision</h3><p>From day one</p></div>
+        <div class="card"><h3>Paid Time Off</h3><p>Starts immediately</p></div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer id="contact">
     <div class="container">
-      <h2>Lyons Industries, Inc.</h2>
+      <h2>Lyons Industries</h2>
       <div class="contact-info">
-        30000 M-62 West<br>
-        Dowagiac, MI 49047
+        30000 M-62 West<br>Dowagiac, MI 49047
       </div>
       <div class="contact-info">
         Customer Service: <a href="tel:2697823404">(269) 782-3404</a> • Toll Free: <a href="tel:8004589036">(800) 458-9036</a><br>
-        HR / Applicants: <a href="tel:2698690161">(269) 869-0161</a> (se habla español)<br>
-        Fax: (269) 782-5159 • Email: <a href="mailto:lyonssupport@lyonsindustries.com">lyonssupport@lyonsindustries.com</a>
+        HR: <a href="tel:2698690161">(269) 869-0161</a> (se habla español)<br>
+        Email: <a href="mailto:lyonssupport@lyonsindustries.com">lyonssupport@lyonsindustries.com</a>
       </div>
-      <p class="cta-large">
-        <a href="#jobs" class="btn btn-large">Apply Now</a>
-      </p>
-      <p class="small">© 2026 Lyons Industries, Inc. • Family-owned since the 1970s • Proudly made in Michigan</p>
+      <p class="small">© 2026 Lyons Industries, Inc. • Family-owned in Michigan</p>
     </div>
   </footer>
 
-  <script src="js/script.js"></script>
 </body>
 </html>
