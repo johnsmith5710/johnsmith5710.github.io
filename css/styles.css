@@ -151,6 +151,14 @@ nav a:hover {
   pointer-events: none;
 }
 
+.hero-sentinel-up {
+  position: absolute;
+  top: 50px;
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+}
+
 .video-wrap {
   position: absolute;
   inset: 0;
