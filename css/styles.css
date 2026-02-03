@@ -84,15 +84,28 @@ nav a:hover {
   color: var(--secondary);
 }
 
-/* Hero section with background video */
-.hero {
+/* Hero Parallax Section */
+.hero-parallax {
   position: relative;
-  color: white;
-  text-align: center;
-  min-height: 80vh;
+  height: 90vh;                    /* taller for more parallax room */
+  min-height: 600px;
   overflow: hidden;
   display: flex;
   align-items: center;
+  justify-content: center;
+  perspective: 10px;               /* Key: creates 3D space – smaller value = stronger parallax */
+  color: white;
+  text-align: center;
+}
+
+.parallax-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;    /* Important for 3D children */
+  z-index: -1;
 }
 
 .hero-video {
@@ -103,22 +116,24 @@ nav a:hover {
   min-height: 100%;
   width: auto;
   height: auto;
-  transform: translate(-50%, -50%);
+  transform: 
+    translate(-50%, -50%) 
+    translateZ(-2px)             /* Push video deeper in 3D space → slower apparent movement */
+    scale(1.15);                 /* Slightly enlarge to compensate for depth & avoid edges */
   object-fit: cover;
-  z-index: -2;
+  z-index: -1;
 }
 
-.hero::after {
+/* Dark overlay for readability */
+.hero-parallax::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 80, 0.65);
   z-index: -1;
 }
 
+/* Content stays in front, no parallax */
 .hero-content {
   position: relative;
   z-index: 2;
@@ -126,16 +141,52 @@ nav a:hover {
   padding: 40px 20px;
 }
 
-.hero h1 {
-  font-size: 3rem;
+.hero-parallax h1 {
+  font-size: 3.2rem;
   margin-bottom: 1.2rem;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  text-shadow: 0 3px 12px rgba(0,0,0,0.7);
 }
 
-.hero p {
-  font-size: 1.3rem;
-  max-width: 700px;
-  margin: 0 auto 2rem;
+.hero-parallax p {
+  font-size: 1.35rem;
+  max-width: 720px;
+  margin: 0 auto 2.5rem;
+}
+
+/* Enhance parallax feel on scroll (subtle scale + translate) */
+@media (prefers-reduced-motion: no-preference) {
+  .parallax-container {
+    transition: transform 0.4s ease-out; /* optional smooth feel */
+  }
+
+  /* Optional: stronger parallax on larger screens */
+  @media (min-width: 1200px) {
+    .hero-video {
+      transform: 
+        translate(-50%, -50%) 
+        translateZ(-4px) 
+        scale(1.25);
+    }
+  }
+}
+
+/* Mobile fallback – reduce strength or disable heavy effects */
+@media (max-width: 768px) {
+  .hero-parallax {
+    height: 70vh;
+    perspective: 5px;              /* Weaker parallax on small screens */
+  }
+  
+  .hero-video {
+    transform: 
+      translate(-50%, -50%) 
+      translateZ(-1px) 
+      scale(1.1);
+  }
+
+  .hero-parallax h1 {
+    font-size: 2.4rem;
+  }
 }
 
 /* Buttons */
