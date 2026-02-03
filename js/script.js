@@ -8,48 +8,26 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// Header scroll trigger with bidirectional forced completion
+// Lightweight IntersectionObserver for header shrink
 const header = document.querySelector('header');
-const downTrigger = 30;           // px down to trigger scrolled state
-const upTrigger = 200;            // px from top to trigger reset (hysteresis to avoid instant flip)
-const targetDown = 250;           // final scroll position when going down
-let isAnimating = false;
-let lastScrollY = 0;
+const sentinel = document.querySelector('.hero-sentinel');
 
-function handleScroll() {
-  if (isAnimating) return;
-
-  const scrollY = window.scrollY;
-  const scrollingDown = scrollY > lastScrollY;
-
-  if (scrollingDown && scrollY > downTrigger && !header.classList.contains('scrolled')) {
-    // Going down → force to scrolled state + scroll to target
-    header.classList.add('scrolled');
-    isAnimating = true;
-
-    window.scrollTo({
-      top: targetDown,
-      behavior: 'smooth'
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        header.classList.remove('scrolled');  // at top → large logo + circle
+      } else {
+        header.classList.add('scrolled');     // scrolled past hero top → small + no circle
+      }
     });
-
-    setTimeout(() => { isAnimating = false; }, 1000);
-  } else if (!scrollingDown && scrollY < upTrigger && header.classList.contains('scrolled')) {
-    // Going up → force back to top state
-    header.classList.remove('scrolled');
-    isAnimating = true;
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-
-    setTimeout(() => { isAnimating = false; }, 1000);
+  },
+  {
+    rootMargin: '-1px 0px 0px 0px',  // triggers exactly when sentinel leaves viewport
+    threshold: 0
   }
+);
 
-  lastScrollY = scrollY;
+if (sentinel) {
+  observer.observe(sentinel);
 }
-
-window.addEventListener('scroll', handleScroll);
-
-// Initial check
-handleScroll();
