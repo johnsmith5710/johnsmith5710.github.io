@@ -11,6 +11,8 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // Lightweight IntersectionObserver for header shrink
 const header = document.querySelector('header');
 const sentinel = document.querySelector('.hero-sentinel');
+const sentinelup = document.querySelector('.hero-sentinel-up');
+
 
 const observer = new IntersectionObserver(
   (entries) => {
