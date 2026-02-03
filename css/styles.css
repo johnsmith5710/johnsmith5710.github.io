@@ -65,9 +65,21 @@ header .container {
 }
 
 .logo {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--primary);
+  font-size: 0;           /* hide any leftover text size */
+}
+
+.logo-img {
+  height: 48px;           /* adjust this value to match your design */
+  width: auto;
+  max-height: 60px;       /* prevent it from getting too big on wide screens */
+  display: block;
+}
+
+/* Optional: make it smaller on mobile */
+@media (max-width: 768px) {
+  .logo-img {
+    height: 40px;
+  }
 }
 
 nav ul {
