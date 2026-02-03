@@ -72,6 +72,7 @@ header .container {
   width: auto;
   max-height: 60px;
   display: block;
+  filter: brightness(0) invert(1);
 }
 
 /* Navigation links – white for dark header */
