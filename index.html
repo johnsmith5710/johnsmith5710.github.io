@@ -23,6 +23,7 @@
         <div class="logo-circle"></div>
         <img src="images/Lyons_Logo_2025.svg" alt="Lyons Industries Logo" class="logo-img">
       </div>
+
       <nav>
         <ul>
           <li><a href="#who">Who We Are</a></li>
@@ -31,6 +32,11 @@
           <li><a href="#contact">Contact</a></li>
         </ul>
       </nav>
+
+      <!-- Google Translate Dropdown – right of nav -->
+      <div class="translate-wrapper">
+        <div id="google_translate_element"></div>
+      </div>
     </div>
   </header>
 
@@ -98,5 +104,18 @@
   </footer>
 
   <script src="js/script.js"></script>
+
+  <!-- Google Translate Script -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,es',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
