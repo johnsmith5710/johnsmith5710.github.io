@@ -51,8 +51,8 @@ header {
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  transition: padding 0.6s ease, box-shadow 0.6s ease;
-  padding: 1.6rem 0;            /* increased slightly to fit larger circle */
+  transition: padding 0.5s ease, box-shadow 0.5s ease;
+  padding: 1.4rem 0;
 }
 
 header.scrolled {
@@ -73,8 +73,8 @@ header.scrolled {
   position: relative;
   width: 80px;
   height: 80px;
-  transition: width 0.6s ease, height 0.6s ease;
-  overflow: visible;            /* allows larger circle to show */
+  transition: width 0.5s ease, height 0.5s ease;
+  overflow: visible;
 }
 
 header.scrolled .logo-wrapper {
@@ -84,12 +84,12 @@ header.scrolled .logo-wrapper {
 
 .logo-circle {
   position: absolute;
-  inset: -50%;                  /* expands beyond wrapper to allow larger scale */
+  inset: -30%;                  /* allows circle to extend beyond wrapper */
   background: white;
   border-radius: 50%;
   opacity: 1;
-  transform: scale(2.5);        /* large circle at top */
-  transition: opacity 0.6s ease 0.1s, transform 0.6s ease;
+  transform: scale(1.5);        /* updated to 1.5 as requested */
+  transition: opacity 0.5s ease 0.05s, transform 0.5s ease;
   z-index: -1;
 }
 
@@ -104,13 +104,12 @@ header.scrolled .logo-circle {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: filter 0.6s ease;
-  /* --primary blue filter */
+  transition: filter 0.5s ease;
   filter: brightness(0) saturate(100%) invert(24%) sepia(94%) saturate(7490%) hue-rotate(202deg) brightness(91%) contrast(101%);
 }
 
 header.scrolled .logo-img {
-  filter: brightness(0) invert(1); /* pure white */
+  filter: brightness(0) invert(1);
 }
 
 /* ── Navigation ── */
@@ -141,6 +140,15 @@ nav a:hover {
   justify-content: center;
   color: white;
   text-align: center;
+}
+
+/* Sentinel for IntersectionObserver (hidden element at top of hero) */
+.hero-sentinel {
+  position: absolute;
+  top: 0;
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
 }
 
 .video-wrap {
