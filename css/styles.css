@@ -51,9 +51,15 @@ header {
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: padding 0.5s ease, box-shadow 0.5s ease;
+  padding: 1.4rem 0;
 }
 
-/* No padding transition here – JS handles it */
+header.scrolled {
+  padding: 0.7rem 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
+
 .header-inner {
   display: flex;
   justify-content: space-between;
@@ -62,12 +68,17 @@ header {
   gap: 1rem;
 }
 
-/* ── Animated Logo ── */
+/* ── Animated Logo (class-based) ── */
 .logo-wrapper {
   position: relative;
-  /* initial values – JS will override immediately */
   width: 80px;
   height: 80px;
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+header.scrolled .logo-wrapper {
+  width: 48px;
+  height: 48px;
 }
 
 .logo-circle {
@@ -75,8 +86,15 @@ header {
   inset: 0;
   background: white;
   border-radius: 50%;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.5s ease 0.1s, transform 0.5s ease;
   z-index: -1;
-  /* JS will control opacity & transform */
+}
+
+header.scrolled .logo-circle {
+  opacity: 0;
+  transform: scale(0.1);
 }
 
 .logo-img {
@@ -85,7 +103,13 @@ header {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* JS will control filter */
+  transition: filter 0.5s ease;
+  /* --primary blue filter (adjust if your SVG needs a different value) */
+  filter: brightness(0) saturate(100%) invert(24%) sepia(94%) saturate(7490%) hue-rotate(202deg) brightness(91%) contrast(101%);
+}
+
+header.scrolled .logo-img {
+  filter: brightness(0) invert(1); /* pure white */
 }
 
 /* ── Navigation ── */
@@ -289,10 +313,14 @@ footer a:hover {
     padding: 1.5rem 1rem;
   }
 
-  /* Mobile starting size – JS will still interpolate */
   .logo-wrapper {
     width: 64px;
     height: 64px;
+  }
+
+  header.scrolled .logo-wrapper {
+    width: 40px;
+    height: 40px;
   }
 }
 
