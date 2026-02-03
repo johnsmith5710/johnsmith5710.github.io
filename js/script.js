@@ -1,4 +1,4 @@
-// Smooth scrolling for anchors (keep if you have it)
+// Smooth scrolling for anchors
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function (e) {
     e.preventDefault();
@@ -8,36 +8,48 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// Header scroll trigger with forced completion
+// Header scroll trigger with bidirectional forced completion
 const header = document.querySelector('header');
-const triggerThreshold = 20;      // px – start trigger very early
-const targetScroll = 250;         // px – "end of transition" (adjust to your preference)
+const downTrigger = 30;           // px down to trigger scrolled state
+const upTrigger = 200;            // px from top to trigger reset (hysteresis to avoid instant flip)
+const targetDown = 250;           // final scroll position when going down
 let isAnimating = false;
+let lastScrollY = 0;
 
 function handleScroll() {
   if (isAnimating) return;
 
   const scrollY = window.scrollY;
+  const scrollingDown = scrollY > lastScrollY;
 
-  if (scrollY > triggerThreshold) {
-    // User has started scrolling down → force complete the scroll + add class
+  if (scrollingDown && scrollY > downTrigger && !header.classList.contains('scrolled')) {
+    // Going down → force to scrolled state + scroll to target
     header.classList.add('scrolled');
     isAnimating = true;
 
     window.scrollTo({
-      top: targetScroll,
+      top: targetDown,
       behavior: 'smooth'
     });
 
-    // Reset flag after animation (~1s)
     setTimeout(() => { isAnimating = false; }, 1000);
-  } else {
-    // Back at top
+  } else if (!scrollingDown && scrollY < upTrigger && header.classList.contains('scrolled')) {
+    // Going up → force back to top state
     header.classList.remove('scrolled');
+    isAnimating = true;
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+
+    setTimeout(() => { isAnimating = false; }, 1000);
   }
+
+  lastScrollY = scrollY;
 }
 
 window.addEventListener('scroll', handleScroll);
 
-// Initial check on load
+// Initial check
 handleScroll();
