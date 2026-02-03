@@ -1,41 +1,43 @@
+// Smooth scrolling for anchors (keep if you have it)
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelector(this.getAttribute('href')).scrollIntoView({
+      behavior: 'smooth'
+    });
+  });
+});
+
+// Header scroll trigger with forced completion
 const header = document.querySelector('header');
-const logoWrapper = document.querySelector('.logo-wrapper');
-const logoCircle = document.querySelector('.logo-circle');
-const logoImg = document.querySelector('.logo-img');
+const triggerThreshold = 20;      // px – start trigger very early
+const targetScroll = 250;         // px – "end of transition" (adjust to your preference)
+let isAnimating = false;
 
-const maxScroll = 150; // distance in pixels where animation completes
+function handleScroll() {
+  if (isAnimating) return;
 
-function updateOnScroll() {
   const scrollY = window.scrollY;
-  const progress = Math.min(scrollY / maxScroll, 1);
 
-  // Header padding
-  const paddingStart = 1.4;
-  const paddingEnd = 0.7;
-  header.style.padding = `${paddingStart - (paddingStart - paddingEnd) * progress}rem 0`;
+  if (scrollY > triggerThreshold) {
+    // User has started scrolling down → force complete the scroll + add class
+    header.classList.add('scrolled');
+    isAnimating = true;
 
-  // Logo wrapper size
-  const sizeStart = 80;
-  const sizeEnd = 48;
-  const size = sizeStart - (sizeStart - sizeEnd) * progress;
-  logoWrapper.style.width = `${size}px`;
-  logoWrapper.style.height = `${size}px`;
+    window.scrollTo({
+      top: targetScroll,
+      behavior: 'smooth'
+    });
 
-  // Circle fade & shrink
-  logoCircle.style.opacity = 1 - progress;
-  logoCircle.style.transform = `scale(${1 - progress * 0.9})`;
-
-  // Logo color – simple switch at 50% (you can make this gradient if you want)
-  if (progress < 0.5) {
-    logoImg.style.filter = 'brightness(0) saturate(100%) invert(24%) sepia(94%) saturate(7490%) hue-rotate(202deg) brightness(91%) contrast(101%)';
+    // Reset flag after animation (~1s)
+    setTimeout(() => { isAnimating = false; }, 1000);
   } else {
-    logoImg.style.filter = 'brightness(0) invert(1)';
+    // Back at top
+    header.classList.remove('scrolled');
   }
 }
 
-window.addEventListener('scroll', () => {
-  requestAnimationFrame(updateOnScroll);
-});
+window.addEventListener('scroll', handleScroll);
 
-// Initial call (handles already-scrolled pages)
-updateOnScroll();
+// Initial check on load
+handleScroll();
