@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lyons Industries – Factory Jobs</title>
-  <meta name="description" content="Entry-level factory jobs in Dowagiac, MI – great pay, benefits, no experience needed."/>
-  <link rel="icon" href="images/Lyons_Logo_2025.svg" type="image/svg+xml"/>
-  <link rel="stylesheet" href="css/styles.css"/>
+  <meta name="description" content="Entry-level factory jobs in Dowagiac, MI – great pay, benefits, no experience needed.">
+  <link rel="icon" href="images/Lyons_Logo_2025.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -17,30 +17,31 @@
     </div>
   </div>
 
-  <header>
+  <header class="header">
     <div class="container header-inner">
-      <!-- Logo always visible on left -->
-      <a href="#" class="logo-link" aria-label="Back to home">
+      <!-- Logo (clickable, scrolls to top) -->
+      <a href="#" class="logo-link" aria-label="Lyons Industries Home">
         <div class="logo-wrapper">
           <div class="logo-circle"></div>
-          <img src="images/Lyons_Logo_2025.svg" alt="Lyons Industries Logo" class="logo-img"/>
+          <img src="images/Lyons_Logo_2025.svg" alt="Lyons Industries Logo" class="logo-img">
         </div>
       </a>
 
-      <!-- Hamburger (visible only on mobile) -->
-      <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="main-nav">
+      <!-- Hamburger (mobile only) -->
+      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="main-nav">
         <span></span>
         <span></span>
         <span></span>
       </button>
 
-      <!-- Navigation (hidden on mobile until opened) -->
+      <!-- Navigation -->
       <nav class="main-nav" id="main-nav">
         <ul>
-          <li><a href="#who">Who We Are</a></li>
-          <li><a href="#jobs">Jobs</a></li>
-          <li><a href="#benefits">Benefits</a></li>
-          <li><a href="#contact">Contact</a></li>
+          <li><a href="#" class="nav-link active">Home</a></li> <!-- active on home page -->
+          <li><a href="who.html" class="nav-link">Who We Are</a></li>
+          <li><a href="jobs.html" class="nav-link">Jobs</a></li>
+          <li><a href="benefits.html" class="nav-link">Benefits</a></li>
+          <li><a href="contact.html" class="nav-link">Contact</a></li>
         </ul>
       </nav>
     </div>
@@ -49,7 +50,7 @@
   <section class="hero">
     <div class="video-wrap">
       <video class="hero-video" autoplay muted loop playsinline poster="images/Lyons-Industries-1-aspect-ratio-1920-850.jpg">
-        <source src="https://raw.githubusercontent.com/johnsmith5710/johnsmith5710.github.io/main/videos/hero-video.mp4" type="video/mp4"/>
+        <source src="https://raw.githubusercontent.com/johnsmith5710/johnsmith5710.github.io/main/videos/hero-video.mp4" type="video/mp4">
         Your browser does not support video.
       </video>
     </div>
