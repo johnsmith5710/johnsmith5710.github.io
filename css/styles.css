@@ -1,4 +1,4 @@
-:root {
+ti:root {
   --primary: #004080;
   --secondary: #0066cc;
   --light: #f8f9fa;
@@ -33,7 +33,7 @@ body {
   text-align: center;
   padding: 0.6rem 0;
   font-size: 0.95rem;
-  position: fixed;
+  position: relative;
   z-index: 2;
 }
 
