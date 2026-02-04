@@ -17,7 +17,6 @@ body {
   line-height: 1.6;
   color: var(--dark);
   background: var(--light);
-  top: 0 !important; /* Critical: prevents Google Translate layout shift */
 }
 
 .container {
@@ -65,13 +64,6 @@ header {
   gap: 1rem;
 }
 
-/* Group nav + translate on the right */
-.right-group {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
 /* ── Animated Logo (JS-controlled) ── */
 .logo-wrapper {
   position: relative;
@@ -115,82 +107,6 @@ nav a {
 
 nav a:hover {
   color: #a5d8ff;
-}
-
-/* ── Google Translate Styling (Enhanced) ── */
-.translate-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-/* CRITICAL: Hide ONLY the top banner frame, not the widget */
-.goog-te-banner-frame {
-  display: none !important;
-}
-
-/* Prevent body shift from banner */
-body {
-  top: 0 !important;
-}
-
-/* Hide "Powered by" text in the gadget */
-.goog-te-gadget .goog-logo-link {
-  display: none !important;
-}
-
-.goog-te-gadget {
-  color: transparent !important;
-  font-size: 0 !important;
-}
-
-.goog-te-gadget > span:first-child {
-  display: none !important;
-}
-
-.goog-te-gadget > div {
-  display: inline-block !important;
-}
-
-/* Style the dropdown with maximum specificity */
-#google_translate_element .goog-te-gadget-simple {
-  background: rgba(255,255,255,0.15) !important;
-  border: 1px solid rgba(255,255,255,0.3) !important;
-  border-radius: 6px !important;
-  padding: 8px 14px !important;
-  font-size: 14px !important;
-  line-height: 1.5 !important;
-  display: inline-block !important;
-  cursor: pointer !important;
-  transition: background 0.2s ease !important;
-}
-
-#google_translate_element .goog-te-gadget-simple:hover {
-  background: rgba(255,255,255,0.25) !important;
-}
-
-#google_translate_element .goog-te-gadget-simple .goog-te-menu-value {
-  color: white !important;
-}
-
-#google_translate_element .goog-te-gadget-simple .goog-te-menu-value span {
-  color: white !important;
-  border-left-color: rgba(255,255,255,0.4) !important;
-}
-
-#google_translate_element .goog-te-gadget-simple .goog-te-menu-value span:first-child {
-  color: white !important;
-}
-
-/* Make dropdown arrow white */
-#google_translate_element .goog-te-gadget-simple .goog-te-menu-value > span:last-child {
-  border-left: 1px solid rgba(255,255,255,0.4) !important;
-  padding-left: 8px !important;
-  margin-left: 8px !important;
-}
-
-/* Style the actual dropdown menu when opened */
-.goog-te-menu-frame {
-  max-width: 100% !important;
 }
 
 /* ── Hero – fixed full-screen video ── */
@@ -352,11 +268,11 @@ footer a:hover {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .right-group {
+  nav ul {
     flex-direction: column;
-    align-items: flex-end;
     gap: 1rem;
     margin-top: 1rem;
+    text-align: center;
   }
 
   .header-inner {
@@ -395,10 +311,5 @@ footer a:hover {
   .btn {
     padding: 0.8rem 1.6rem;
     font-size: 0.95rem;
-  }
-
-  .right-group {
-    align-items: center;
-    width: 100%;
   }
 }
