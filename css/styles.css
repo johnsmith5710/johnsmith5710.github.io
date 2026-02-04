@@ -4,6 +4,7 @@
   --light: #f8f9fa;
   --dark: #333;
   --alt: #f0f4ff;
+  --clear: #00000000;
 }
 
 * {
@@ -27,11 +28,13 @@ body {
 
 /* ── Top bar ── */
 .top-bar {
-  background: var(--primary);
+  background: var(--clear);
   color: white;
   text-align: center;
   padding: 0.6rem 0;
   font-size: 0.95rem;
+  position: fixed;
+  z-index: 2;
 }
 
 .top-bar a {
