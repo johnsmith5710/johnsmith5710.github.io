@@ -56,3 +56,46 @@ window.addEventListener('scroll', () => {
 // Initial + resize handling
 updateHeader();
 window.addEventListener('resize', updateHeader);
+
+// ── Google Translate Banner Killer ──
+// This aggressively removes the top banner that Google Translate tries to add
+function killGoogleTranslateBanner() {
+  // Remove any translate banner frames
+  const frames = document.querySelectorAll('.goog-te-banner-frame, .skiptranslate');
+  frames.forEach(frame => {
+    if (frame.parentElement && frame.parentElement.tagName === 'BODY') {
+      frame.style.display = 'none';
+      frame.remove();
+    }
+  });
+  
+  // Reset body positioning that Google Translate manipulates
+  document.body.style.top = '0';
+  document.body.style.position = 'static';
+  
+  // Remove iframe if it exists
+  const iframes = document.querySelectorAll('iframe.goog-te-banner-frame');
+  iframes.forEach(iframe => iframe.remove());
+}
+
+// Run the banner killer multiple times as Google Translate loads asynchronously
+setTimeout(killGoogleTranslateBanner, 100);
+setTimeout(killGoogleTranslateBanner, 500);
+setTimeout(killGoogleTranslateBanner, 1000);
+setTimeout(killGoogleTranslateBanner, 2000);
+
+// Watch for DOM changes and kill banner if it appears
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === 1 && (node.classList?.contains('skiptranslate') || node.classList?.contains('goog-te-banner-frame'))) {
+        killGoogleTranslateBanner();
+      }
+    });
+  });
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
