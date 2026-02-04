@@ -318,3 +318,19 @@ footer a:hover {
     font-size: 0.95rem;
   }
 }
+/* Logo link – makes whole area clickable */
+.logo-link {
+  display: block;
+  text-decoration: none;
+  line-height: 0; /* removes extra space */
+}
+
+/* Optional: subtle hover effect on logo */
+.logo-link:hover .logo-wrapper {
+  opacity: 0.9;
+}
+
+/* Ensure pointer cursor on hover */
+.logo-link {
+  cursor: pointer;
+}
