@@ -141,13 +141,12 @@ body {
   color: white;
   text-decoration: none;
   font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  position: relative;
+  opacity: 0.9;
+  transition: opacity 0.2s, transform 0.2s, text-shadow 0.2s;
 }
 
 .main-nav a:hover {
+  opacity: 1;
   transform: scale(1.08);
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
@@ -156,7 +155,10 @@ body {
 .main-nav a.active {
   background: white;
   color: var(--primary);
+  opacity: 1;
   font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
 }
 
 /* ── Mobile Menu ── */
@@ -201,6 +203,8 @@ body {
   .main-nav a.active {
     background: white;
     color: var(--primary);
+    padding: 1rem 2rem;
+    border-radius: 8px;
   }
 
   /* Overlay */
