@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyons Industries – Factory Jobs</title>
+  <meta name="description" content="Entry-level factory jobs in Dowagiac, MI – great pay, benefits, no experience needed.">
+  <link rel="icon" href="images/Lyons_Logo_2025.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="container">
+      Customer Service: <a href="tel:8004589036">(800) 458-9036</a> • 
+      HR / Applicants: <a href="tel:2698690161">(269) 869-0161</a> (se habla español)
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="container header-inner">
+      <!-- Logo (clickable, scrolls to top) -->
+      <a href="#" class="logo-link" aria-label="Lyons Industries Home">
+        <div class="logo-wrapper">
+          <div class="logo-circle"></div>
+          <img src="images/Lyons_Logo_2025.svg" alt="Lyons Industries Logo" class="logo-img">
+        </div>
+      </a>
+
+      <!-- Hamburger (mobile only) -->
+      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="main-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Navigation -->
+      <nav class="main-nav" id="main-nav">
+        <ul>
+          <li><a href="#" class="nav-link active">Home</a></li>
+          <li><a href="who.html" class="nav-link">Who We Are</a></li>
+          <li><a href="jobs.html" class="nav-link">Jobs</a></li>
+          <li><a href="benefits.html" class="nav-link">Benefits</a></li>
+          <li><a href="contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="video-wrap">
+      <video class="hero-video" autoplay muted loop playsinline poster="images/Lyons-Industries-1-aspect-ratio-1920-850.jpg">
+        <source src="https://raw.githubusercontent.com/johnsmith5710/johnsmith5710.github.io/main/videos/hero-video.mp4" type="video/mp4">
+        Your browser does not support video.
+      </video>
+    </div>
+    <div class="hero-content">
+      <h1>Factory Jobs in Dowagiac, Michigan</h1>
+      <p>Entry-level • Competitive wages • Excellent benefits • No experience required – we train</p>
+      <a href="#jobs" class="btn btn-primary">View Openings</a>
+      <a href="#contact" class="btn btn-outline">Contact Us</a>
+    </div>
+  </section>
+
+  <section id="who">
+    <div class="container">
+      <h2>Who We Are</h2>
+      <div class="card">
+        <p>Family-owned for over 50 years. Committed to the Dowagiac community and treating every team member with respect.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="jobs" class="alt-bg">
+    <div class="container">
+      <h2>Job Openings</h2>
+      <div class="card">
+        <h3>Entry-Level Manufacturing – Dowagiac, MI</h3>
+        <p class="highlight">1st Shift ~$19/hr • 2nd Shift ~$21/hr + premium</p>
+        <p>No experience needed – full training provided.</p>
+        <a href="#" class="btn btn-primary">Apply Now</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="benefits">
+    <div class="container">
+      <h2>Our Benefits</h2>
+      <div class="grid">
+        <div class="card"><h3>Profit Sharing</h3><p>Share in the success</p></div>
+        <div class="card"><h3>401(k)</h3><p>Retirement plan</p></div>
+        <div class="card"><h3>Medical / Dental / Vision</h3><p>From day one</p></div>
+        <div class="card"><h3>Paid Time Off</h3><p>Starts immediately</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <div class="container">
+      <h2>Lyons Industries</h2>
+      <div class="contact-info">
+        30000 M-62 West<br>Dowagiac, MI 49047
+      </div>
+      <div class="contact-info">
+        Customer Service: <a href="tel:2697823404">(269) 782-3404</a> • Toll Free: <a href="tel:8004589036">(800) 458-9036</a><br>
+        HR: <a href="tel:2698690161">(269) 869-0161</a> (se habla español)<br>
+        Email: <a href="mailto:lyonssupport@lyonsindustries.com">lyonssupport@lyonsindustries.com</a>
+      </div>
+      <p class="small">© 2026 Lyons Industries, Inc. • Family-owned in Michigan</p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
