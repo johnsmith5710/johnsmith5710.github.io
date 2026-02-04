@@ -17,7 +17,7 @@ body {
   line-height: 1.6;
   color: var(--dark);
   background: var(--light);
-  top: 0 !important; /* Prevent Google Translate from shifting body */
+  top: 0 !important; /* Critical: prevents Google Translate layout shift */
 }
 
 .container {
@@ -117,26 +117,26 @@ nav a:hover {
   color: #a5d8ff;
 }
 
-/* ── Google Translate Dropdown – improved styling & no top bar ── */
+/* ── Google Translate – clean, no top bar, fits styling ── */
 .translate-wrapper {
   display: flex;
   align-items: center;
 }
 
-/* Hide Google Translate top banner completely */
+/* Completely hide Google top banner & branding */
 .goog-te-banner-frame { display: none !important; }
-.goog-te-gadget { font-size: 0 !important; } /* hide "Powered by" text */
-.goog-te-gadget-simple { font-size: 14px !important; } /* restore dropdown font size */
+.goog-te-gadget { font-size: 0 !important; } /* hide "Powered by" */
+.goog-te-gadget-simple { font-size: 14px !important; } /* restore dropdown size */
 
-/* Clean dropdown styling */
+/* Styled dropdown */
 .goog-te-gadget-simple {
   background: rgba(255,255,255,0.15) !important;
   border: 1px solid rgba(255,255,255,0.3) !important;
   border-radius: 6px !important;
   padding: 8px 14px !important;
   color: white !important;
+  min-width: 130px;
   transition: background 0.2s ease;
-  min-width: 120px;
 }
 
 .goog-te-gadget-simple:hover {
@@ -151,9 +151,10 @@ nav a:hover {
   color: white !important;
 }
 
-/* Arrow icon */
+/* Add globe icon */
 .goog-te-gadget-simple .goog-te-menu-value::before {
   content: "🌐 ";
+  margin-right: 4px;
 }
 
 /* ── Hero – fixed full-screen video ── */
