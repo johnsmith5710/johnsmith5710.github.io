@@ -123,27 +123,27 @@ nav a:hover {
   align-items: center;
 }
 
-/* CRITICAL: Hide the top banner frame completely */
-body > .skiptranslate {
+/* CRITICAL: Hide ONLY the top banner frame, not the widget */
+.goog-te-banner-frame {
   display: none !important;
 }
 
-.goog-te-banner-frame.skiptranslate {
-  display: none !important;
-}
-
+/* Prevent body shift from banner */
 body {
   top: 0 !important;
-  position: static !important;
 }
 
-/* Hide "Powered by" text */
+/* Hide "Powered by" text in the gadget */
+.goog-te-gadget .goog-logo-link {
+  display: none !important;
+}
+
 .goog-te-gadget {
-  font-size: 0 !important;
   color: transparent !important;
+  font-size: 0 !important;
 }
 
-.goog-te-gadget > span {
+.goog-te-gadget > span:first-child {
   display: none !important;
 }
 
