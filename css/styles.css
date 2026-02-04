@@ -117,44 +117,80 @@ nav a:hover {
   color: #a5d8ff;
 }
 
-/* ── Google Translate – clean, no top bar, fits styling ── */
+/* ── Google Translate Styling (Enhanced) ── */
 .translate-wrapper {
   display: flex;
   align-items: center;
 }
 
-/* Completely hide Google top banner & branding */
-.goog-te-banner-frame { display: none !important; }
-.goog-te-gadget { font-size: 0 !important; } /* hide "Powered by" */
-.goog-te-gadget-simple { font-size: 14px !important; } /* restore dropdown size */
+/* CRITICAL: Hide the top banner frame completely */
+body > .skiptranslate {
+  display: none !important;
+}
 
-/* Styled dropdown */
-.goog-te-gadget-simple {
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+  position: static !important;
+}
+
+/* Hide "Powered by" text */
+.goog-te-gadget {
+  font-size: 0 !important;
+  color: transparent !important;
+}
+
+.goog-te-gadget > span {
+  display: none !important;
+}
+
+.goog-te-gadget > div {
+  display: inline-block !important;
+}
+
+/* Style the dropdown with maximum specificity */
+#google_translate_element .goog-te-gadget-simple {
   background: rgba(255,255,255,0.15) !important;
   border: 1px solid rgba(255,255,255,0.3) !important;
   border-radius: 6px !important;
   padding: 8px 14px !important;
-  color: white !important;
-  min-width: 130px;
-  transition: background 0.2s ease;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease !important;
 }
 
-.goog-te-gadget-simple:hover {
+#google_translate_element .goog-te-gadget-simple:hover {
   background: rgba(255,255,255,0.25) !important;
 }
 
-.goog-te-menu-value {
+#google_translate_element .goog-te-gadget-simple .goog-te-menu-value {
   color: white !important;
 }
 
-.goog-te-menu-value span {
+#google_translate_element .goog-te-gadget-simple .goog-te-menu-value span {
+  color: white !important;
+  border-left-color: rgba(255,255,255,0.4) !important;
+}
+
+#google_translate_element .goog-te-gadget-simple .goog-te-menu-value span:first-child {
   color: white !important;
 }
 
-/* Add globe icon */
-.goog-te-gadget-simple .goog-te-menu-value::before {
-  content: "🌐 ";
-  margin-right: 4px;
+/* Make dropdown arrow white */
+#google_translate_element .goog-te-gadget-simple .goog-te-menu-value > span:last-child {
+  border-left: 1px solid rgba(255,255,255,0.4) !important;
+  padding-left: 8px !important;
+  margin-left: 8px !important;
+}
+
+/* Style the actual dropdown menu when opened */
+.goog-te-menu-frame {
+  max-width: 100% !important;
 }
 
 /* ── Hero – fixed full-screen video ── */
