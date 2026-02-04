@@ -1,10 +1,9 @@
-ti:root {
+:root {
   --primary: #004080;
   --secondary: #0066cc;
   --light: #f8f9fa;
   --dark: #333;
   --alt: #f0f4ff;
-  --clear: #00000000;
 }
 
 * {
@@ -18,6 +17,7 @@ body {
   line-height: 1.6;
   color: var(--dark);
   background: var(--light);
+  top: 0 !important; /* Prevent Google Translate from shifting body */
 }
 
 .container {
@@ -28,7 +28,7 @@ body {
 
 /* ── Top bar ── */
 .top-bar {
-  background: var(--clear);
+  background: transparent;
   color: white;
   text-align: center;
   padding: 0.6rem 0;
@@ -51,7 +51,7 @@ body {
 header {
   background: var(--primary);
   position: sticky;
-  top: -1px;
+  top: 0;
   z-index: 100;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
@@ -63,6 +63,13 @@ header {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+/* Group nav + translate on the right */
+.right-group {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
 
 /* ── Animated Logo (JS-controlled) ── */
@@ -110,29 +117,26 @@ nav a:hover {
   color: #a5d8ff;
 }
 
-/* ── Google Translate Dropdown ── */
+/* ── Google Translate Dropdown – improved styling & no top bar ── */
 .translate-wrapper {
   display: flex;
   align-items: center;
 }
 
-#google_translate_element {
-  color: white;
-}
+/* Hide Google Translate top banner completely */
+.goog-te-banner-frame { display: none !important; }
+.goog-te-gadget { font-size: 0 !important; } /* hide "Powered by" text */
+.goog-te-gadget-simple { font-size: 14px !important; } /* restore dropdown font size */
 
-.goog-te-gadget {
-  font-family: system-ui, sans-serif !important;
-  font-size: 14px !important;
-  color: white !important;
-}
-
+/* Clean dropdown styling */
 .goog-te-gadget-simple {
   background: rgba(255,255,255,0.15) !important;
   border: 1px solid rgba(255,255,255,0.3) !important;
   border-radius: 6px !important;
-  padding: 6px 12px !important;
+  padding: 8px 14px !important;
+  color: white !important;
   transition: background 0.2s ease;
-  cursor: pointer;
+  min-width: 120px;
 }
 
 .goog-te-gadget-simple:hover {
@@ -141,17 +145,15 @@ nav a:hover {
 
 .goog-te-menu-value {
   color: white !important;
-  text-decoration: none !important;
 }
 
 .goog-te-menu-value span {
   color: white !important;
 }
 
-/* Hide Google branding */
-.goog-logo-link,
-.goog-te-gadget .goog-te-gadget-icon {
-  display: none !important;
+/* Arrow icon */
+.goog-te-gadget-simple .goog-te-menu-value::before {
+  content: "🌐 ";
 }
 
 /* ── Hero – fixed full-screen video ── */
@@ -313,21 +315,16 @@ footer a:hover {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  nav ul {
+  .right-group {
     flex-direction: column;
+    align-items: flex-end;
     gap: 1rem;
     margin-top: 1rem;
-    text-align: center;
   }
 
   .header-inner {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .translate-wrapper {
-    margin-top: 1rem;
-    align-self: flex-end;
   }
 
   .hero {
@@ -361,5 +358,10 @@ footer a:hover {
   .btn {
     padding: 0.8rem 1.6rem;
     font-size: 0.95rem;
+  }
+
+  .right-group {
+    align-items: center;
+    width: 100%;
   }
 }
