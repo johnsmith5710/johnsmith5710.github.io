@@ -93,3 +93,4 @@ function updateHeader() {
 window.addEventListener('scroll', () => requestAnimationFrame(updateHeader));
 window.addEventListener('resize', updateHeader);
 updateHeader();
+ 
