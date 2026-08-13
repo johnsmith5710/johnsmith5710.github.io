@@ -1,0 +1,13 @@
+/* ============================================================
+   careers.css — Shared styles for the jobs/careers cluster
+   Used by: Careers/Careers.html, Join/Join.html,
+            Join/Benefits.html, Spotlight/Spotlight.html
+   Depends on: styles.css
+   ============================================================ */
+
+/* Wage / shift highlight line inside job listing cards */
+.highlight {
+  font-weight: 600;
+  color: var(--secondary);
+  margin: 1rem 0;
+}

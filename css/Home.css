@@ -1,0 +1,23 @@
+/* ============================================================
+   home.css — index.html specific styles
+   Depends on: styles.css
+   ============================================================ */
+
+/* Parallax background section (Products section on homepage) */
+.parallax-bg {
+  background-image: url('../images/parallax-min.jpg');
+  min-height: 500px;
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Hero-alt: full-bleed section with video background visible through it */
+.hero-alt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
