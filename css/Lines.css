@@ -1,0 +1,251 @@
+/* ============================================================
+   Lines.css — Product line pages
+   Used by: Products/Wave.html, Products/Linear.html,
+            Products/Contour.html, Products/Monaco.html,
+            Products/SeaWave.html, Products/Elite.html
+   Depends on: styles.css, Products.css (alternating rows)
+   ============================================================ */
+
+/* ── Hero eyebrow (line label above the name) ── */
+.line-eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--surface);
+  opacity: 0.85;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Line switcher ── */
+.line-switch {
+  padding: 2.5rem 0 0;
+  position: relative; /* sits above the fixed hero video, same as section */
+  z-index: 1;
+}
+
+.line-switch-label {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.line-switch ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+}
+
+.line-switch a,
+.line-switch a:link,
+.line-switch a:visited {
+  display: block;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid #cddcee;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.line-switch a:hover {
+  background: var(--alt);
+  border-color: var(--secondary);
+  color: var(--secondary);
+  text-decoration: none;
+}
+
+.line-switch a.current,
+.line-switch a.current:link,
+.line-switch a.current:visited {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--surface);
+}
+
+.line-switch a.pending::after {
+  content: " •";
+  color: var(--secondary);
+}
+
+/* ── Line intro ── */
+.line-intro {
+  padding: var(--section-py) 0 3rem;
+  text-align: center;
+}
+
+.line-intro p {
+  max-width: 700px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+}
+
+/* ── Model table ── */
+.spec-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  background: var(--surface);
+}
+
+.spec-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.98rem;
+}
+
+.spec-table th {
+  background: var(--primary);
+  color: var(--surface);
+  text-align: left;
+  padding: 0.9rem 1rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.spec-table td {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid #e0e8f4;
+  color: var(--text-muted);
+  vertical-align: top;
+}
+
+.spec-table td.model {
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.spec-table td.size {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.spec-table tbody tr:hover td {
+  background: var(--alt);
+}
+
+.table-note {
+  max-width: 700px;
+  margin: 1.25rem auto 0;
+  text-align: center;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+/* ── Document links ── */
+.doc-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-list a,
+.doc-list a:link,
+.doc-list a:visited {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid #dbe6f3;
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.doc-list a:hover {
+  border-color: var(--secondary);
+  color: var(--secondary);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.doc-list svg {
+  flex: none;
+  opacity: 0.6;
+}
+
+/* ── Coming soon (placeholder line pages) ── */
+.coming-soon {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.badge-soon {
+  display: inline-block;
+  background: var(--secondary);
+  color: var(--surface);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.25rem;
+}
+
+.coming-soon p {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.coming-soon p + p {
+  margin-top: 1rem;
+}
+
+/* ── Editor note — internal only. Delete the markup before you publish. ── */
+.editor-note {
+  max-width: 760px;
+  margin: 2rem auto 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #d98b00;
+  background: #fff8e6;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  color: #7a5200;
+  text-align: left;
+}
+
+.editor-note strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .line-switch a {
+    font-size: 0.9rem;
+    padding: 0.45rem 0.85rem;
+  }
+}

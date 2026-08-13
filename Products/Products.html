@@ -7,7 +7,9 @@
   <meta name="description" content="Bathtubs, showers, wall surrounds, shower doors, whirlpool baths, and RV bathware from Lyons Industries.">
   <link rel="icon" href="../images/Lyons_Logo_2025.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../css/styles.css">
-  <link rel="stylesheet" href="../css/Products.css"></head>
+  <link rel="stylesheet" href="../css/Products.css">
+  <link rel="stylesheet" href="../css/Lines.css">
+</head>
 <body>
 
   <div class="top-bar">
@@ -35,7 +37,18 @@
       <nav class="main-nav" id="main-nav">
         <ul>
           <li><a href="../index.html" class="nav-link">Home</a></li>
-          <li><a href="Products.html" class="nav-link active">Products</a></li>
+          <li class="has-dropdown">
+            <a href="Products.html" class="nav-link active">Products</a>
+            <ul class="dropdown">
+              <li><a href="Products.html" class="active">All Products</a></li>
+              <li><a href="Wave.html">Wave&trade;</a></li>
+              <li><a href="Linear.html">Linear&trade;</a></li>
+              <li><a href="Contour.html">Contour&trade;</a></li>
+              <li><a href="Monaco.html">Monaco Premium&trade;</a></li>
+              <li><a href="SeaWave.html">Sea Wave&trade;</a></li>
+              <li><a href="Elite.html">Builders Elite&trade;</a></li>
+            </ul>
+          </li>
           <li class="has-dropdown">
             <a href="../About/Who.html" class="nav-link">About</a>
             <ul class="dropdown">
@@ -73,6 +86,21 @@
       <p>Lyons Industries manufactures a full line of bathware for residential, commercial, and RV applications. For retailer locations, pricing, or detailed specifications, <a href="../Support/Contact.html">contact us</a>.</p>
     </div>
   </section>
+
+  <!-- Product lines -->
+  <div class="line-switch" style="padding-bottom:3rem;">
+    <div class="container">
+      <p class="line-switch-label">Browse by Product Line</p>
+      <ul>
+        <li><a href="Wave.html">Wave&trade;</a></li>
+        <li><a href="Linear.html" class="pending">Linear&trade;</a></li>
+        <li><a href="Contour.html" class="pending">Contour&trade;</a></li>
+        <li><a href="Monaco.html" class="pending">Monaco Premium&trade;</a></li>
+        <li><a href="SeaWave.html" class="pending">Sea Wave&trade;</a></li>
+        <li><a href="Elite.html" class="pending">Builders Elite&trade;</a></li>
+      </ul>
+    </div>
+  </div>
 
   <!-- Alternating product rows -->
   <div class="product-section">
