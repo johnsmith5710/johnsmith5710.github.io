@@ -93,4 +93,65 @@ function updateHeader() {
 window.addEventListener('scroll', () => requestAnimationFrame(updateHeader));
 window.addEventListener('resize', updateHeader);
 updateHeader();
- 
+
+// Model tables: filter by footprint size. A type with no match greys out.
+document.querySelectorAll('.models-block').forEach(block => {
+  const chips = block.querySelectorAll('.filter-chip');
+  const groups = block.querySelectorAll('.model-group');
+  const emptyMsg = block.querySelector('.filter-empty');
+  if (!chips.length || !groups.length) return;
+
+  function apply(size) {
+    let total = 0;
+
+    groups.forEach(group => {
+      let visible = 0;
+      group.querySelectorAll('tbody tr').forEach(row => {
+        // A row lists every footprint it fits, so any one of them can match.
+        const sizes = (row.dataset.size || '').split(' ');
+        const match = size === 'all' || sizes.indexOf(size) !== -1;
+        row.hidden = !match;
+        if (match) visible++;
+
+        // Flag the row when this size is only reached by cutting the panel.
+        const flag = row.querySelector('.cut-flag');
+        if (flag) {
+          flag.hidden = !(match && size !== 'all' && row.dataset.nominal !== size);
+        }
+      });
+
+      const count = group.querySelector('[data-count]');
+      if (count) count.textContent = visible;
+
+      const empty = visible === 0;
+      group.classList.toggle('is-empty', empty);
+      group.open = !empty;
+      total += visible;
+    });
+
+    if (emptyMsg) emptyMsg.hidden = total > 0;
+  }
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(other => {
+        const on = other === chip;
+        other.classList.toggle('is-active', on);
+        other.setAttribute('aria-pressed', on);
+      });
+      apply(chip.dataset.size);
+    });
+  });
+
+  // A greyed out group must not open.
+  groups.forEach(group => {
+    const summary = group.querySelector('summary');
+    if (summary) {
+      summary.addEventListener('click', e => {
+        if (group.classList.contains('is-empty')) e.preventDefault();
+      });
+    }
+  });
+
+  apply('all');
+});
