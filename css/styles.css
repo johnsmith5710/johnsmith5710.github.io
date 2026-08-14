@@ -10,6 +10,7 @@
 :root {
   /* Brand colors */
   --primary:        #004080;
+  --primary-muted:  #3f73a6;   /* primary, less saturation, shifted to white — dropdown hover */
   --secondary:      #0066cc;
   --light:          #f8f9fa;
   --dark:           #333;
@@ -196,7 +197,9 @@ body {
   opacity: 0.9;
   transition: opacity var(--transition-fast),
               transform var(--transition-fast),
-              text-shadow var(--transition-fast);
+              text-shadow var(--transition-fast),
+              background var(--transition-fast),
+              box-shadow var(--transition-fast);
 }
 
 .main-nav a:hover {
@@ -249,11 +252,12 @@ body {
   font-weight: 500;
   opacity: 0.9;
   border-radius: 0;
-  transition: background var(--transition-fast), opacity var(--transition-fast);
+  transition: background var(--transition-fast), opacity var(--transition-fast),
+              box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .main-nav .dropdown a:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--primary-muted);
   opacity: 1;
 }
 
@@ -261,11 +265,23 @@ body {
 .main-nav a.nav-link:visited,
 .main-nav .dropdown a:visited {
   color: var(--visit-light) !important;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .main-nav a.active:visited {
   color: var(--primary) !important;
+}
+
+/* The active item is a white pill. It gets its own hover effect. The other
+   items become larger. This one tints and lifts. */
+.main-nav a.active:hover,
+.main-nav a.nav-link.active:hover,
+.main-nav .dropdown a.active:hover {
+  background: var(--surface-alt);
+  color: var(--primary) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+  text-shadow: none;
 }
 
 /* ── Mobile menu ── */
@@ -354,11 +370,55 @@ body {
   }
 }
 
-/* ── Global link styles ── */
-a:link    { color: #ffffff; text-decoration: underline; }
+/* ── Global link styles ──
+   A body link uses the brand blue. The white link color applies only to the
+   header, the top bar, and the hero. Each of these has a dark background. */
+a:link    { color: var(--secondary); text-decoration: underline; }
 a:visited { color: var(--visit-dark); text-decoration: underline; }
-a:hover   { color: var(--secondary); text-decoration: underline; text-underline-offset: 2px; }
-a:active  { color: var(--secondary); }
+a:hover   { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+a:active  { color: var(--primary); }
+
+/* A dark background keeps the white link color. */
+.top-bar a:link,
+.top-bar a:visited,
+.top-bar a:hover,
+.header a:link,
+.header a:visited,
+.header a:hover,
+.hero a:link,
+.hero a:visited,
+.hero a:hover {
+  color: var(--surface);
+}
+
+/* A button sets its own color. These rules keep the link colors out. */
+a.btn-primary:link,
+a.btn-primary:visited,
+a.btn-primary:hover {
+  color: var(--surface);
+}
+
+a.btn-outline:link,
+a.btn-outline:visited {
+  color: var(--primary);
+}
+
+a.btn-outline:hover {
+  color: var(--surface);
+}
+
+/* The top bar, the nav, and the buttons carry no underline. Each of these
+   sets text-decoration: none, but the global link rules above out-rank it. */
+.top-bar a:link,
+.top-bar a:visited,
+.main-nav a:link,
+.main-nav a:visited,
+.main-nav a:hover,
+a.btn:link,
+a.btn:visited,
+a.btn:hover {
+  text-decoration: none;
+}
 
 /* ── Hero ── */
 .hero {

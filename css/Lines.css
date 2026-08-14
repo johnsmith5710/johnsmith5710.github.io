@@ -19,10 +19,14 @@
 }
 
 /* ── Line switcher ── */
+/* The hero video is fixed and sits behind the page. Any block with no
+   background of its own lets the video show through and the text becomes
+   hard to read. Each block below states a background for that reason. */
 .line-switch {
-  padding: 2.5rem 0 0;
+  padding: 2.5rem 0 1.5rem;
   position: relative; /* sits above the fixed hero video, same as section */
   z-index: 1;
+  background: var(--surface);
 }
 
 .line-switch-label {
@@ -35,13 +39,14 @@
   margin-bottom: 1rem;
 }
 
+/* A grid keeps ten lines in tidy columns. A flex row left a ragged last row. */
 .line-switch ul {
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
   gap: 0.6rem;
-  margin: 0;
+  max-width: 940px;
+  margin: 0 auto;
   padding: 0;
 }
 
@@ -85,6 +90,16 @@
 .line-intro {
   padding: var(--section-py) 0 3rem;
   text-align: center;
+  background: var(--surface);
+}
+
+/* Both blocks also need an opaque background over the fixed hero video. */
+#documents {
+  background: var(--surface);
+}
+
+.retailer-cta {
+  background: var(--alt);
 }
 
 .line-intro p {
@@ -141,6 +156,44 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Shown when the chosen size is not the size the panel ships as. */
+.cut-flag {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.cut-flag[hidden] {
+  display: none;
+}
+
+/* What separates two part numbers for one product. */
+.model-detail {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.84rem;
+  color: var(--primary);
+}
+
+/* The other sizes a panel cuts down to. */
+.size-fits {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  white-space: normal;
+}
+
 .spec-table tbody tr:hover td {
   background: var(--alt);
 }
@@ -151,6 +204,334 @@
   text-align: center;
   font-size: 0.92rem;
   color: var(--text-muted);
+}
+
+/* ── Color key ── */
+.color-key {
+  margin: 1.75rem auto 0;
+  text-align: center;
+}
+
+.color-key-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.9rem;
+}
+
+.color-key ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.color-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 108px;
+}
+
+.color-swatch img {
+  width: 108px;
+  height: 108px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--surface-alt);
+  display: block;
+}
+
+.color-code {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.color-name {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.color-key-note {
+  max-width: 620px;
+  margin: 1rem auto 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+/* ── Model size filters ── */
+.model-filters {
+  margin: 0 auto 1.75rem;
+  text-align: center;
+}
+
+.filter-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.filter-chip {
+  padding: 0.45rem 1.05rem;
+  border: 1px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.filter-chip:hover {
+  background: var(--alt);
+  border-color: var(--secondary);
+}
+
+.filter-chip.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--surface);
+}
+
+.filter-empty {
+  margin-top: 0.9rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+/* ── Model groups ── */
+.model-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.model-group {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.model-group > summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--primary);
+  color: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  transition: background var(--transition-fast);
+}
+
+.model-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.model-group > summary:hover {
+  background: var(--primary-muted);
+}
+
+.group-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.85;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The arrow. It turns when the group opens. */
+.model-group > summary::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--transition-fast);
+}
+
+.model-group[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+/* The group holds the table, so the table drops its own frame. */
+.model-group .spec-table-wrap {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.spec-table tr[hidden] {
+  display: none;
+}
+
+/* Greyed out: no model of this type has the size you chose. */
+.model-group.is-empty {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.model-group.is-empty > summary,
+.model-group.is-empty > summary:hover {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* ── Warranty and compliance ── */
+.warranty-card {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.warranty-term {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.4rem 1.1rem;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--surface);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.warranty-card p {
+  color: var(--text-muted);
+}
+
+.warranty-card p + p {
+  margin-top: 1rem;
+}
+
+.warranty-summary {
+  font-size: 1.05rem;
+  color: var(--dark);
+}
+
+/* The full legal text. Collapsed by default so it does not fill the page. */
+.warranty-full {
+  margin-top: 1.25rem;
+  text-align: left;
+  border-top: 1px solid var(--surface-alt);
+}
+
+.warranty-full > summary {
+  padding: 0.9rem 0 0;
+  cursor: pointer;
+  list-style: none;
+  text-align: center;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.warranty-full > summary::-webkit-details-marker {
+  display: none;
+}
+
+.warranty-full > summary:hover {
+  color: var(--secondary);
+}
+
+.warranty-text {
+  margin-top: 1.25rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.warranty-text h3 {
+  color: var(--primary);
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.warranty-text h4 {
+  margin-top: 1.25rem;
+  color: var(--primary);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.warranty-text p {
+  margin-top: 0.6rem;
+}
+
+.warranty-sub {
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+/* Kept in capitals because the supplied statement is written that way. */
+.warranty-caps {
+  font-size: 0.84rem;
+}
+
+.compliance-list {
+  max-width: 720px;
+  margin: 1.5rem auto 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.5rem 1.5rem;
+}
+
+.compliance-list li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.compliance-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--secondary);
 }
 
 /* ── Document links ── */
