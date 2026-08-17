@@ -23,6 +23,10 @@
   /* Muted text (body copy, captions) */
   --text-muted:     #555;
 
+  /* Line art: the drawn bathroom on the product viewer */
+  --line-art:       #9db5cd;   /* a drawn product outline */
+  --line-art-soft:  #b9cadd;   /* a fixture that is not the product */
+
   /* Footer link colors */
   --footer-link:    #63b1ff;
 

@@ -93,13 +93,19 @@
   background: var(--surface);
 }
 
-/* Both blocks also need an opaque background over the fixed hero video. */
-#documents {
+/* Every block below needs an opaque background over the fixed hero video.
+   The tints also alternate down the page so two blocks never merge into one
+   slab: models (alt) - warranty (white) - documents (alt) - cta (white). */
+.warranty-block {
   background: var(--surface);
 }
 
-.retailer-cta {
+#documents {
   background: var(--alt);
+}
+
+.retailer-cta {
+  background: var(--surface);
 }
 
 .line-intro p {

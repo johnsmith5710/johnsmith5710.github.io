@@ -1,0 +1,608 @@
+/* ============================================================
+   SeeIt.css — the product viewer page
+   Loads after styles.css and Lines.css.
+   Every color comes from the tokens in styles.css :root.
+
+   Layout: a wizard on the left, a sticky drawing on the right.
+   One step is open at a time, so the panel gets the full column
+   width and the tiles sit four or five across instead of two.
+   ============================================================ */
+
+/* ── Head ───────────────────────────────────────────────── */
+.seeit-head {
+  padding: 2rem 0 1.5rem;
+  background: var(--primary);
+  color: var(--surface);
+  text-align: center;
+}
+
+.seeit-head h1 {
+  margin: 0.35rem 0 0.5rem;
+  color: var(--surface);
+  font-size: clamp(1.6rem, 3.6vw, 2.2rem);
+}
+
+.seeit-head p {
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--surface-alt);
+}
+
+.seeit-head .line-eyebrow {
+  color: var(--surface-alt);
+}
+
+/* ── The two columns ────────────────────────────────────── */
+.seeit-block {
+  padding: 1.75rem 0 3rem;
+  background: var(--light);
+}
+
+/* The room on the left, the options on the right. The source is in that
+   order too, so a keyboard runs through the page the way it looks. */
+.seeit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.seeit-wizard,
+.seeit-stage {
+  min-width: 0;
+}
+
+/* ── The step rail ──────────────────────────────────────── */
+.seeit-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.seeit-rail button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.4rem;
+  border: 1px solid var(--surface-alt);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.seeit-rail button:hover:not(:disabled) {
+  border-color: var(--secondary);
+  color: var(--primary);
+}
+
+.seeit-rail button[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.seeit-rail button.is-here {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--surface);
+}
+
+/* The badge holds the step number, or a tick once it is answered. */
+.rail-n {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: var(--alt);
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.seeit-rail button.is-here .rail-n {
+  background: var(--surface);
+}
+
+.seeit-rail button.is-done .rail-n {
+  background: var(--secondary);
+  color: var(--surface);
+}
+
+/* ── The open step ──────────────────────────────────────── */
+.seeit-panel {
+  padding: 1.25rem 1.35rem 1.1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.seeit-panel h2 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.15rem;
+  text-align: left;
+}
+
+.seeit-panel > p.panel-hint {
+  margin: 0.2rem 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.seeit-group + .seeit-group {
+  margin-top: 1.1rem;
+}
+
+.seeit-group > h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.seeit-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Tiles: a short choice, four or five across ─────────── */
+.seeit-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 0.45rem;
+}
+
+.tile {
+  padding: 0.55rem 0.5rem;
+  border: 2px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast),
+              background var(--transition-fast);
+}
+
+.tile strong {
+  display: block;
+  color: var(--primary);
+  font-size: 0.98rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.tile span {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+
+.tile:hover {
+  border-color: var(--secondary);
+  background: var(--alt);
+}
+
+.tile.is-on {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.tile.is-on strong,
+.tile.is-on span {
+  color: var(--surface);
+}
+
+/* ── Cards: a model, with its line, size, and part number ─ */
+.seeit-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 0.5rem;
+}
+
+.mcard {
+  display: block;
+  padding: 0.6rem 0.7rem 0.55rem;
+  border: 2px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast),
+              background var(--transition-fast);
+}
+
+.mcard:hover {
+  border-color: var(--secondary);
+  background: var(--alt);
+}
+
+.mcard.is-on {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.mc-line {
+  display: block;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+.mc-name {
+  display: block;
+  margin: 0.1rem 0;
+  color: var(--primary);
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+.mc-size {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.mc-part {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.mcard.is-on .mc-line,
+.mcard.is-on .mc-name,
+.mcard.is-on .mc-size,
+.mcard.is-on .mc-part {
+  color: var(--surface);
+}
+
+/* A wall that is wider than the alcove and cuts down to it. */
+.mc-flag {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--alt);
+  color: var(--primary);
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.mcard.is-on .mc-flag {
+  background: var(--surface);
+  color: var(--primary);
+}
+
+/* ── Color swatches ─────────────────────────────────────── */
+.seeit-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 0.45rem;
+}
+
+.swatch {
+  padding: 0;
+  border: 2px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font: inherit;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.swatch img {
+  display: block;
+  width: 100%;
+  height: 52px;
+  object-fit: cover;
+}
+
+.swatch span {
+  display: block;
+  padding: 0.28rem 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+
+.swatch:hover {
+  border-color: var(--secondary);
+}
+
+.swatch.is-on {
+  border-color: var(--primary);
+}
+
+.swatch.is-on span {
+  background: var(--primary);
+  color: var(--surface);
+}
+
+/* ── A note shown inside a panel ────────────────────────── */
+.seeit-note-inline {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--secondary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--alt);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.seeit-note-inline:empty {
+  display: none;
+}
+
+/* ── Back and next ──────────────────────────────────────────
+   These carry their own look. The global .btn-outline is drawn for a
+   dark hero, so its white border vanishes on this white panel.        */
+.seeit-nav {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1.15rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--surface-alt);
+}
+
+.seeit-nav .spacer {
+  flex: 1;
+}
+
+.seeit-btn {
+  padding: 0.45rem 1.1rem;
+  border: 2px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.seeit-btn:hover:not(:disabled) {
+  border-color: var(--secondary);
+  background: var(--alt);
+}
+
+.seeit-btn-go {
+  border-color: var(--secondary);
+  background: var(--secondary);
+  color: var(--surface);
+}
+
+.seeit-btn-go:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.seeit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── The drawing, and the build under it ────────────────── */
+.seeit-sticky {
+  position: sticky;
+  top: 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* The room. The canvas sizes itself, so the box only has to hold a shape
+   before it arrives and stop the page jumping when it does. */
+.seeit-view {
+  position: relative;
+  aspect-ratio: 25 / 18;
+  background: var(--alt);
+  overflow: hidden;
+}
+
+.seeit-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.seeit-canvas.is-dragging {
+  cursor: grabbing;
+}
+
+.seeit-canvas:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: -3px;
+}
+
+.seeit-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* No WebGL, so the room is a still instead. */
+.seeit-shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Nothing has been rendered for this part yet. Show the empty room rather
+   than a broken image icon. */
+.seeit-shot.is-blank {
+  visibility: hidden;
+}
+
+.seeit-caption {
+  margin: 0;
+  padding: 0.8rem 1.1rem;
+  border-top: 1px solid var(--surface-alt);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.seeit-build {
+  padding: 0.9rem 1.1rem 1rem;
+  background: var(--alt);
+}
+
+.seeit-build h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.build-list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.3rem 0.6rem;
+  align-items: baseline;
+}
+
+.build-list dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.build-list dd {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.build-list dd.is-empty {
+  font-weight: 400;
+  color: var(--line-art);
+}
+
+.build-list dd span {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.seeit-foot {
+  padding: 0.8rem 1.1rem;
+  border-top: 1px solid var(--surface-alt);
+}
+
+.seeit-foot p {
+  margin: 0 0 0.7rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.seeit-foot .btn {
+  width: 100%;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+}
+
+/* ── Keyboard ───────────────────────────────────────────────
+   The whole page is buttons, and a chosen tile is already solid blue, so
+   the browser default ring is hard to pick out on one. This is explicit.  */
+.tile:focus-visible,
+.mcard:focus-visible,
+.swatch:focus-visible,
+.seeit-btn:focus-visible,
+.seeit-rail button:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 2px;
+}
+
+.tile.is-on:focus-visible,
+.mcard.is-on:focus-visible {
+  outline-color: var(--dark);
+}
+
+/* ── The link that sends a visitor here from a line page ── */
+.seeit-link {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+/* ── Narrow screens ─────────────────────────────────────── */
+@media (max-width: 980px) {
+  .seeit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* The room already comes first in the source, so one column puts it at
+     the top with no reordering. */
+  .seeit-sticky {
+    position: static;
+  }
+
+  .seeit-view {
+    aspect-ratio: 4 / 3;
+  }
+
+  .seeit-cards {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .mcard,
+  .swatch,
+  .seeit-rail button {
+    transition: none;
+  }
+}

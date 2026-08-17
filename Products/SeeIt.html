@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>See It In Your Bathroom &mdash; Lyons Industries</title>
+  <meta name="description" content="Measure your alcove, then see every Lyons
+    bathtub, base, and wall surround that fits it, drawn in a bathroom.">
+  <link rel="icon" href="../images/Lyons_Logo_2025.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/Lines.css">
+  <link rel="stylesheet" href="../css/SeeIt.css">
+  <script type="importmap">
+  {"imports": {
+    "three": "../js/vendor/three.module.min.js",
+    "three/addons/": "../js/vendor/addons/"
+  }}
+  </script>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="container">
+      Customer Service: <a href="tel:8004589036">(800) 458-9036</a> &bull;
+      HR / Applicants: <a href="tel:2698690161">(269) 869-0161</a> (se habla espa&ntilde;ol)
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="container header-inner">
+      <a href="../index.html" class="logo-link" aria-label="Lyons Industries Home">
+        <div class="logo-wrapper">
+          <div class="logo-circle"></div>
+          <img src="../images/Lyons_Logo_2025.svg" alt="Lyons Industries Logo" class="logo-img">
+        </div>
+      </a>
+
+      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="main-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="main-nav" id="main-nav">
+        <ul>
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li class="has-dropdown">
+            <a href="Products.html" class="nav-link active">Products</a>
+            <ul class="dropdown">
+              <li><a href="Products.html">All Products</a></li>
+              <li><a href="Wave.html">Wave&trade;</a></li>
+              <li><a href="Linear.html">Linear&trade;</a></li>
+              <li><a href="Elite.html">Elite&trade;</a></li>
+              <li><a href="Contour.html">Contour&trade;</a></li>
+              <li><a href="Arcadia.html">Arcadia&trade;</a></li>
+              <li><a href="Triumph.html">Triumph&trade;</a></li>
+              <li><a href="Victory.html">Victory&trade;</a></li>
+              <li><a href="SelectADA.html">Select ADA&trade;</a></li>
+              <li><a href="Garden.html">Garden&trade;</a></li>
+              <li><a href="DropIn.html">Drop-In&trade;</a></li>
+              <li><a href="SeaWave.html">Sea Wave&trade;</a></li>
+              <li><a href="GlueUp.html">Glue-Up</a></li>
+            </ul>
+          </li>
+          <li class="has-dropdown">
+            <a href="../About/Who.html" class="nav-link">About</a>
+            <ul class="dropdown">
+              <li><a href="../About/Who.html">Who We Are</a></li>
+              <li><a href="../About/Team.html">Our Team</a></li>
+              <li><a href="../About/Community.html">Community Involvement</a></li>
+              <li><a href="../About/News.html">General News</a></li>
+            </ul>
+          </li>
+          <li><a href="../Careers/Careers.html" class="nav-link">Careers</a></li>
+          <li><a href="../Support/Contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="seeit-head">
+    <div class="container">
+      <span class="line-eyebrow">Product Viewer</span>
+      <h1>See It In Your Bathroom</h1>
+      <p>Measure the opening you have to work with. The viewer then shows
+        every bathtub, base, and wall surround that fits it, drawn as you
+        build it up, with the part numbers to take to a dealer.</p>
+    </div>
+  </section>
+
+  <section class="seeit-block">
+    <div class="container seeit-grid">
+
+      <div class="seeit-stage">
+        <div class="seeit-sticky">
+          <div class="seeit-view" id="seeit-view">
+            <p class="seeit-loading" id="seeit-loading">Building the room&hellip;</p>
+          </div>
+          <p class="seeit-caption" id="scene-caption">Pick the size of your
+            opening to start.</p>
+
+          <div class="seeit-build">
+            <h2>Your build</h2>
+            <dl class="build-list" id="build-list"></dl>
+          </div>
+
+          <div class="seeit-foot">
+            <p>The drawing is an illustration, not a photograph. A color can
+              vary a little from the product. Taps, a shower head, and a drain
+              are not included.</p>
+            <a class="btn btn-primary" href="tel:8004589036">Call (800)
+              458-9036</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="seeit-wizard">
+        <div class="seeit-rail" id="seeit-rail" role="group"
+             aria-label="Steps"></div>
+        <div class="seeit-panel" id="seeit-panel"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="retailer-cta">
+    <div class="container">
+      <h2>Looking for a Retailer?</h2>
+      <p>Lyons products are sold at hardware stores nationwide. Our customer service team can point you to a dealer near you.</p>
+      <a href="tel:8004589036" class="btn btn-primary">Call (800) 458-9036</a>
+      <a href="../Support/Contact.html" class="btn btn-outline" style="background:white; color:var(--primary); border-color:var(--primary);">Contact Us</a>
+    </div>
+  </section>
+  <footer id="contact">
+    <div class="container">
+      <h2>Lyons Industries</h2>
+      <div class="contact-info">
+        30000 M-62 West<br>Dowagiac, MI 49047
+      </div>
+      <div class="contact-info">
+        Customer Service: <a href="tel:2697823404">(269) 782-3404</a> &bull; Toll Free: <a href="tel:8004589036">(800) 458-9036</a><br>
+        HR: <a href="tel:2698690161">(269) 869-0161</a> (se habla espa&ntilde;ol)<br>
+        Email: <a href="mailto:lyonssupport@lyonsindustries.com">lyonssupport@lyonsindustries.com</a><br>
+        Office Hours: Monday &ndash; Friday, 8:00 am &ndash; 4:00 pm EST
+      </div>
+      <p class="small">&copy; 2026 Lyons Industries, Inc. &bull; Family-owned in Michigan since 1968</p>
+    </div>
+  </footer>
+
+  <script src="../js/script.js"></script>
+  <script>
+
+  (function () {
+    var DATA = {"fixtures":[{"line":"Wave","lineName":"Wave","number":"WB01603235R / WB01603235L","description":"Single threshold shower base, right or left drain","size":"60\" x 32\" x 3-1/2\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,3.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"L","label":"Left","number":"WB01603235L"},{"drain":"R","label":"Right","number":"WB01603235R"}],"sits":"low"},{"line":"Wave","lineName":"Wave","number":"WB01603035R / WB01603035L","description":"Single threshold shower base, right or left drain","size":"60\" x 30\" x 3-1/2\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":30,"box":[60.0,30.0,3.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"L","label":"Left","number":"WB01603035L"},{"drain":"R","label":"Right","number":"WB01603035R"}],"sits":"low"},{"line":"Wave","lineName":"Wave","number":"WB01483435C","description":"Single threshold shower base, center drain","size":"48\" x 34\" x 3-1/2\"","colors":["White","Biscuit"],"w":48,"d":34,"box":[48.0,34.0,3.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"WB01483435C"}],"sits":"low"},{"line":"Wave","lineName":"Wave","number":"WB01363635C","description":"Single threshold shower base, center drain","size":"36\" x 36\" x 3-1/2\"","colors":["White","Biscuit"],"w":36,"d":36,"box":[36.0,36.0,3.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"WB01363635C"}],"sits":"low"},{"line":"Wave","lineName":"Wave","number":"WB01323235C","description":"Single threshold shower base, center drain","size":"32\" x 32\" x 3-1/2\"","colors":["White","Biscuit"],"w":32,"d":32,"box":[32.0,32.0,3.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"WB01323235C"}],"sits":"low"},{"line":"Wave","lineName":"Wave","number":"WBSL01603219R / WBSR01603219L","description":"Seated shower base, right or left drain","size":"60\" x 32\" x 19\"","colors":["White","Biscuit"],"w":60,"d":32,"box":[60.0,32.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"L","label":"Left","number":"WBSR01603219L"},{"drain":"R","label":"Right","number":"WBSL01603219R"}],"sits":"tall"},{"line":"Wave","lineName":"Wave","number":"WBSL01483419C","description":"Seated shower base, center drain","size":"48\" x 34\" x 19\"","colors":["White","Biscuit"],"w":48,"d":34,"box":[48.0,34.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"C","label":"Center","number":"WBSL01483419C"}],"sits":"tall"},{"line":"Linear","lineName":"Linear","number":"LLT01603619R / LLT01603619L","description":"Linear Bathtub, right or left drain","size":"60\" x 36\" x 19\"","colors":["White","Biscuit"],"w":60,"d":36,"box":[60.0,36.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"L","label":"Left","number":"LLT01603619L"},{"drain":"R","label":"Right","number":"LLT01603619R"}],"sits":"tall"},{"line":"Linear","lineName":"Linear","number":"LLT01603219R / LLT01603219L","description":"Linear Bathtub, right or left drain","size":"60\" x 32\" x 19\"","colors":["White","Biscuit"],"w":60,"d":32,"box":[60.0,32.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"L","label":"Left","number":"LLT01603219L"},{"drain":"R","label":"Right","number":"LLT01603219R"}],"sits":"tall"},{"line":"Linear","lineName":"Linear","number":"LLT01603019R / LLT01603019L","description":"Linear Bathtub, right or left drain","size":"60\" x 30\" x 19\"","colors":["White","Biscuit"],"w":60,"d":30,"box":[60.0,30.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"L","label":"Left","number":"LLT01603019L"},{"drain":"R","label":"Right","number":"LLT01603019R"}],"sits":"tall"},{"line":"Elite","lineName":"Elite","number":"LEBL01543055C","description":"Elite Shower Base, center drain","size":"54\" x 30\" x 5-1/2\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":54,"d":30,"box":[54.0,30.0,5.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"LEBL01543055C"}],"sits":"low"},{"line":"Elite","lineName":"Elite","number":"LEBL01542755R / LEBL01542755L","description":"Elite Shower Base, right or left drain","size":"54\" x 27\" x 5-1/2\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":54,"d":27,"box":[54.0,27.0,5.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"L","label":"Left","number":"LEBL01542755L"},{"drain":"R","label":"Right","number":"LEBL01542755R"}],"sits":"low"},{"line":"Elite","lineName":"Elite","number":"LEBL01542755C","description":"Elite Shower Base, center drain","size":"54\" x 27\" x 5-1/2\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":54,"d":27,"box":[54.0,27.0,5.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"LEBL01542755C"}],"sits":"low"},{"line":"Elite","lineName":"Elite","number":"LEBL01483055C","description":"Elite Shower Base, center drain","size":"48\" x 30\" x 5-1/2\"","colors":["White","Biscuit"],"w":48,"d":30,"box":[48.0,30.0,5.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"LEBL01483055C"}],"sits":"low"},{"line":"Elite","lineName":"Elite","number":"LEB016034C","description":"Elite Shower Base, center drain","size":"60\" x 34\" x 3-1/2\"","colors":["White","Biscuit"],"w":60,"d":34,"box":[60.0,34.0,3.5],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"LEB016034C"}],"sits":"low"},{"line":"Elite","lineName":"Elite","number":"LEBSL016032R / LEBSR016032L","description":"Elite Seated Base, right or left drain","size":"60\" x 32\" x 19\"","colors":["White","Biscuit"],"w":60,"d":32,"box":[60.0,32.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"L","label":"Left","number":"LEBSR016032L"},{"drain":"R","label":"Right","number":"LEBSL016032R"}],"sits":"tall"},{"line":"Elite","lineName":"Elite","number":"LEBSL014834","description":"Elite Seated Base","size":"48\" x 34\" x 19\"","colors":["White","Biscuit"],"w":48,"d":34,"box":[48.0,34.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"","label":"Standard","number":"LEBSL014834"}],"sits":"tall"},{"line":"Elite","lineName":"Elite","number":"ET01603219R / ET01603219L","description":"Elite Bathtub, right or left drain","size":"60\" x 32\" x 19\"","colors":["White","Biscuit"],"w":60,"d":32,"box":[60.0,32.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"L","label":"Left","number":"ET01603219L"},{"drain":"R","label":"Right","number":"ET01603219R"}],"sits":"tall"},{"line":"Elite","lineName":"Elite","number":"ET01603019R / ET01603019L","description":"Elite Bathtub, right or left drain","size":"60\" x 30\" x 19\"","colors":["White","Biscuit"],"w":60,"d":30,"box":[60.0,30.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"L","label":"Left","number":"ET01603019L"},{"drain":"R","label":"Right","number":"ET01603019R"}],"sits":"tall"},{"line":"Elite","lineName":"Elite","number":"ETL01543019R / ETL01543019L","description":"Elite Bathtub, right or left drain","size":"54\" x 30\" x 19\"","colors":["White","Biscuit"],"w":54,"d":30,"box":[54.0,30.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"L","label":"Left","number":"ETL01543019L"},{"drain":"R","label":"Right","number":"ETL01543019R"}],"sits":"tall"},{"line":"Contour","lineName":"Contour","number":"CCSBL016032R / CCSBR016032L","description":"Contour Seated Base, right or left drain","size":"60\" x 32\" x 19\"","colors":["White","Biscuit"],"w":60,"d":32,"box":[60.0,32.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"L","label":"Left","number":"CCSBR016032L"},{"drain":"R","label":"Right","number":"CCSBL016032R"}],"sits":"tall"},{"line":"Arcadia","lineName":"Arcadia","number":"ABSL01603219R / ABSR01603219L","description":"Arcadia Bench Shower Base, right or left drain","size":"60\" x 32\" x 19\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"L","label":"Left","number":"ABSR01603219L"},{"drain":"R","label":"Right","number":"ABSL01603219R"}],"sits":"tall"},{"line":"Victory","lineName":"Victory","number":"VLBSL01543019R / VLBSR01543019L","description":"Victory Seated Base, right or left drain","size":"54\" x 30\" x 19\"","colors":["White","Biscuit"],"w":54,"d":30,"box":[54.0,30.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"L","label":"Left","number":"VLBSR01543019L"},{"drain":"R","label":"Right","number":"VLBSL01543019R"}],"sits":"tall"},{"line":"Victory","lineName":"Victory","number":"VLBSL01542719","description":"Victory Seated Base","size":"54\" x 27\" x 19\"","colors":["White","Biscuit"],"w":54,"d":27,"box":[54.0,27.0,19.0],"shape":"alcove","category":"Seated Base","variants":[{"drain":"","label":"Standard","number":"VLBSL01542719"}],"sits":"tall"},{"line":"Victory","lineName":"Victory","number":"VTL01542716R / VTL01542716L","description":"Victory Bathtub, right or left drain","size":"54\" x 27\" x 16\"","colors":["White","Biscuit"],"w":54,"d":27,"box":[54.0,27.0,16.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"L","label":"Left","number":"VTL01542716L"},{"drain":"R","label":"Right","number":"VTL01542716R"}],"sits":"tall"},{"line":"SelectADA","lineName":"Select ADA","number":"SAB016030C","description":"Select Shower Base, center drain","size":"60\" x 30\"","colors":["White","Biscuit"],"w":60,"d":30,"box":[60.0,30.0,null],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"SAB016030C"}],"sits":"low"},{"line":"Garden","lineName":"Garden","number":"VGBL01544219C","description":"Garden Shower Base, center drain","size":"54\" x 42\" x 19\"","colors":["White","Biscuit"],"w":54,"d":42,"box":[54.0,42.0,19.0],"shape":"alcove","category":"Shower Base","variants":[{"drain":"C","label":"Center","number":"VGBL01544219C"}],"sits":"tall"},{"line":"Garden","lineName":"Garden","number":"VGTLSC01544219C","description":"Garden Bathtub, center drain","size":"54\" x 42\" x 19\"","colors":["White","Biscuit"],"w":54,"d":42,"box":[54.0,42.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"C","label":"Center","number":"VGTLSC01544219C"}],"sits":"tall"},{"line":"Garden","lineName":"Garden","number":"CGTL01544219C","description":"Classic Garden Bathtub, center drain","size":"54\" x 42\" x 19\"","colors":["White","Biscuit"],"w":54,"d":42,"box":[54.0,42.0,19.0],"shape":"alcove","category":"Bathtub","variants":[{"drain":"C","label":"Center","number":"CGTL01544219C"}],"sits":"tall"},{"line":"SeaWave","lineName":"Sea Wave","number":"SVT01484820","description":"Sea Wave V","size":"48\" x 48\" x 20\"","colors":["White"],"w":48,"d":48,"box":[48.0,48.0,20.0],"shape":"corner","category":"Bathtub","variants":[{"drain":"","label":"Standard","number":"SVT01484820"}],"sits":"tall"},{"line":"SeaWave","lineName":"Sea Wave","number":"SXT01545419","description":"Sea Wave X","size":"54\" x 54\" x 19 3/4\"","colors":["White","Biscuit"],"w":54,"d":54,"box":[54.0,54.0,19.75],"shape":"corner","category":"Bathtub","variants":[{"drain":"","label":"Standard","number":"SXT01545419"}],"sits":"tall"}],"walls":[{"line":"Wave","lineName":"Wave","number":"WS01603274","description":"Shower wall surround","size":"60\" x 32\" x 74\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,74.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Wave","lineName":"Wave","number":"WS01306074","description":"Shower wall surround","size":"60\" x 30\" x 74\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":30,"box":[60.0,30.0,74.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Wave","lineName":"Wave","number":"WS01483474","description":"Shower wall surround","size":"48\" x 34\" x 74\"","colors":["White","Biscuit"],"w":48,"d":34,"box":[48.0,34.0,74.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Wave","lineName":"Wave","number":"WS01363674","description":"Shower wall surround","size":"36\" x 36\" x 74\"","colors":["White","Biscuit"],"w":36,"d":36,"box":[36.0,36.0,74.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Wave","lineName":"Wave","number":"WS01323274","description":"Shower wall surround","size":"32\" x 32\" x 74\"","colors":["White","Biscuit"],"w":32,"d":32,"box":[32.0,32.0,74.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Wave","lineName":"Wave","number":"WS01603259","description":"Wall surround for a bathtub or a seated base","size":"60\" x 32\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Wave","lineName":"Wave","number":"WS01483459","description":"Wall surround for a bathtub or a seated base","size":"48\" x 34\" x 59\"","colors":["White","Biscuit"],"w":48,"d":34,"box":[48.0,34.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Linear","lineName":"Linear","number":"L01603259","description":"Linear II Surround","size":"60\" x 32\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Linear","lineName":"Linear","number":"L01603059","description":"Linear II Surround","size":"60\" x 30\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":30,"box":[60.0,30.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Elite","lineName":"Elite","number":"ES01603259","description":"Elite II Surround","size":"60\" x 32\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Elite","lineName":"Elite","number":"ES01603059","description":"Elite II Surround","size":"60\" x 30\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":30,"box":[60.0,30.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LES01346069","description":"Elite Shower Surround","size":"60\" x 34\" x 69\"","colors":["White","Biscuit"],"w":60,"d":34,"box":[60.0,34.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LES016069","description":"Elite Shower Surround","size":"60\" x 32\" x 69\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LES01306069","description":"Elite Shower Surround","size":"60\" x 30\" x 69\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":30,"box":[60.0,30.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LESCS01305469","description":"Elite Shower Surround","size":"54\" x 30\" x 69\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":54,"d":30,"box":[54.0,30.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LESCS01275469","description":"Elite Shower Surround","size":"54\" x 27\" x 69\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":54,"d":27,"box":[54.0,27.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LESCS01344869","description":"Elite Shower Surround","size":"48\" x 34\" x 69\"","colors":["White","Biscuit"],"w":48,"d":34,"box":[48.0,34.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LESCS01304869","description":"Elite Shower Surround","size":"48\" x 30\" x 69\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":48,"d":30,"box":[48.0,30.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LES013669","description":"Elite Shower Surround","size":"36\" x 36\" x 69\"","colors":["White","Biscuit"],"w":36,"d":36,"box":[36.0,36.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LES013269","description":"Elite Shower Surround","size":"32\" x 32\" x 69\"","colors":["White","Biscuit"],"w":32,"d":32,"box":[32.0,32.0,69.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LESCS01326059","description":"Elite Surround","size":"60\" x 32\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LESCS01305459","description":"Elite Surround","size":"54\" x 30\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":54,"d":30,"box":[54.0,30.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Elite","lineName":"Elite","number":"LESCS01275459","description":"Elite Surround","size":"54\" x 27\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":54,"d":27,"box":[54.0,27.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Contour","lineName":"Contour","number":"CC01603259","description":"Contour Surround","size":"60\" x 32\" x 59\"","colors":["White","Biscuit"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Contour","lineName":"Contour","number":"CC01603059","description":"Contour Surround","size":"60\" x 30\" x 59\"","colors":["White","Biscuit"],"w":60,"d":30,"box":[60.0,30.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Arcadia","lineName":"Arcadia","number":"AS01603259","description":"Arcadia Surround","size":"60\" x 32\" x 59\"","colors":["White","Biscuit","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Triumph","lineName":"Triumph","number":"T01603259","description":"Triumph Surround","size":"60\" x 32\" x 59\"","colors":["White","Biscuit"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Triumph","lineName":"Triumph","number":"T01603059","description":"Triumph Surround","size":"60\" x 30\" x 59\"","colors":["White","Biscuit"],"w":60,"d":30,"box":[60.0,30.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Triumph","lineName":"Triumph","number":"T01543059","description":"Triumph Surround","size":"54\" x 30\" x 59\"","colors":["White","Biscuit"],"w":54,"d":30,"box":[54.0,30.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"Triumph","lineName":"Triumph","number":"T01542759","description":"Triumph Surround","size":"54\" x 27\" x 59\"","colors":["White","Biscuit"],"w":54,"d":27,"box":[54.0,27.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"SelectADA","lineName":"Select ADA","number":"SAS01603074","description":"Select Surround","size":"60\" x 30\" x 74\"","colors":["White","Biscuit"],"w":60,"d":30,"box":[60.0,30.0,74.0],"shape":"alcove","fits":[],"over":"low","pairs":[]},{"line":"Garden","lineName":"Garden","number":"LESCS01425459","description":"Elite Garden Surround","size":"54\" x 42\" x 59\"","colors":["White","Biscuit"],"w":54,"d":42,"box":[54.0,42.0,59.0],"shape":"alcove","fits":[],"over":"tall","pairs":[]},{"line":"GlueUp","lineName":"Glue-Up","number":"MP0172","description":"Monaco Premium&trade; wall surround","size":"60\" x 36\" x 72\"","colors":["White","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":36,"box":[60.0,36.0,72.0],"shape":"alcove","fits":["60x32","60x30","48x34","36x36","32x32"],"over":"low","pairs":[]},{"line":"GlueUp","lineName":"Glue-Up","number":"ES01603278","description":"Empire Tall wall surround","size":"60\" x 32\" x 78\"","colors":["White"],"w":60,"d":32,"box":[60.0,32.0,78.0],"shape":"alcove","fits":["60x30","54x30","54x27"],"over":"low","pairs":[]},{"line":"GlueUp","lineName":"Glue-Up","number":"GP01605458","description":"General Purpose wall surround","size":"60\" x 54\" x 58\"","colors":["White"],"w":60,"d":54,"box":[60.0,54.0,58.0],"shape":"alcove","fits":[],"over":"tall","pairs":["SXT01545419","SVT01484820"]},{"line":"GlueUp","lineName":"Glue-Up","number":"CP01603259","description":"Cove Pro wall surround","size":"60\" x 32\" x 58\"","colors":["White","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,58.0],"shape":"alcove","fits":["60x30","54x30","54x27"],"over":"tall","pairs":[]},{"line":"GlueUp","lineName":"Glue-Up","number":"CON01603259","description":"Convertible wall surround","size":"60\" x 32\" x 59\"","colors":["White","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":["60x30","54x30","54x27"],"over":"tall","pairs":[]},{"line":"GlueUp","lineName":"Glue-Up","number":"PF01603259","description":"Pro-Tough wall surround","size":"60\" x 32\" x 59\"","colors":["White"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":["60x30","54x30","54x27"],"over":"tall","pairs":[]},{"line":"GlueUp","lineName":"Glue-Up","number":"SE01603259","description":"Sedona wall surround","size":"60\" x 32\" x 59\"","colors":["White"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":["60x30","54x30","54x27"],"over":"tall","pairs":[]},{"line":"GlueUp","lineName":"Glue-Up","number":"VS01603259","description":"Versatile wall surround","size":"60\" x 32\" x 59\"","colors":["White","Glacier Marble","Luna Grey","Luna Pearl"],"w":60,"d":32,"box":[60.0,32.0,59.0],"shape":"alcove","fits":["60x30","54x30","54x27"],"over":"tall","pairs":[]}],"extras":[{"line":"Triumph","lineName":"Triumph","number":"T0160-HHB / T0160-HB / T0160-B","description":"60\" Back Panel","role":"back","inches":60},{"line":"Triumph","lineName":"Triumph","number":"T0154-HB / T0154-B","description":"54\" Back Panel","role":"back","inches":54},{"line":"Triumph","lineName":"Triumph","number":"T0132-HVR / T0132-HVL / T0132-R / T0132-L","description":"32\" Side Panels, left and right","role":"side","inches":32},{"line":"Triumph","lineName":"Triumph","number":"T0130-HVR / T0130-HVL / T0130-R / T0130-L","description":"30\" Side Panels, left and right","role":"side","inches":30},{"line":"Triumph","lineName":"Triumph","number":"T0127-HVR / T0127-HVL / T0127-R / T0127-L","description":"27\" Side Panels, left and right","role":"side","inches":27}],"models":["WB01603235R","WS01603274"],"colorImages":{"White":"../images/Lyons_White-N.jpg","Biscuit":"../images/Lyons_Biscuit-N.jpg","Glacier Marble":"../images/Lyons_Glacier_Marble.jpg","Luna Grey":"../images/Lyons_Luna_Gray.jpg","Luna Pearl":"../images/Lyons_Luna_Pearl.jpg"}};
+
+    function $(id) { return document.getElementById(id); }
+
+    function el(tag, cls, html) {
+      var n = document.createElement(tag);
+      if (cls) { n.className = cls; }
+      if (html !== undefined) { n.innerHTML = html; }
+      return n;
+    }
+
+    function uniq(a) {
+      return a.filter(function (v, i) { return a.indexOf(v) === i; });
+    }
+    function down(a, b) { return b - a; }
+
+    var railBox = $('seeit-rail');
+    var panelBox = $('seeit-panel');
+    var buildBox = $('build-list');
+    var caption = $('scene-caption');
+    var viewBox = $('seeit-view');
+
+    // pending until the library answers, then 3d or flat. The wizard runs
+    // the same either way; only the picture changes.
+    var mode = 'pending';
+    var viewer = null;
+    var shot = null;
+
+    var TYPES = ['Bathtub', 'Shower Base', 'Seated Base'];
+
+    // A piece is tall or low. That is what sets the height of the wall over
+    // it, and the workbook holds the number: 3-1/2 to 5-1/2 in. for a base
+    // you walk into, 16 to 20 in. for a bathtub, a seat, or a garden base.
+    var STANDS = {
+      tall: {label: 'A bathtub or a seat', note: 'you step over a rim'},
+      low: {label: 'A low shower base', note: 'you walk straight in'}
+    };
+
+    var STEPS = [
+      {id: 'alcove', title: 'Alcove', head: 'Your alcove',
+       hint: 'Start here. The opening is the one measurement you cannot change.'},
+      {id: 'piece', title: 'Bathtub or base', head: 'Bathtub or base',
+       hint: 'Everything below fits that opening, whichever line it comes from.'},
+      {id: 'drain', title: 'Drain', head: 'Drain location',
+       hint: 'Match the drain that is already in the floor.'},
+      {id: 'wall', title: 'Wall', head: 'Wall surround',
+       hint: 'A wall can come from another line, as long as it suits the opening and the piece under it.'},
+      {id: 'panels', title: 'Grab bars', head: 'Grab bar panels',
+       hint: 'This wall is reinforced for grab bars. Take the back panel, the side panels, both, or neither.'},
+      {id: 'color', title: 'Color', head: 'Colors',
+       hint: 'The bathtub or base and the wall are picked apart, so the two can differ.'}
+    ];
+
+    // A step that only exists in some builds. It is left out of the rail
+    // rather than shown greyed, because a greyed step you can never reach
+    // reads as a fault.
+    var SOMETIMES = {drain: true, panels: true};
+
+    var S, at;
+
+    function blank() {
+      S = {shape: null, width: null, depth: null, type: null, fixKey: null,
+           drain: null, over: null, wallKey: null, extras: [],
+           baseColor: null, wallColor: null, panelsSet: false,
+           colorSet: false};
+      at = 'alcove';
+    }
+
+    // ── What fits ──────────────────────────────────────────────────────
+    function here() {
+      if (S.width === null || S.depth === null) { return []; }
+      return DATA.fixtures.filter(function (m) {
+        return m.shape === S.shape && m.w === S.width && m.d === S.depth;
+      });
+    }
+
+    function typeList() {
+      return TYPES.filter(function (t) {
+        return here().some(function (f) { return f.category === t; });
+      });
+    }
+
+    function ofType() {
+      return here().filter(function (f) { return f.category === S.type; });
+    }
+
+    function fixture() {
+      if (!S.type || S.type === 'none') { return null; }
+      return ofType().filter(function (f) {
+        return f.number === S.fixKey;
+      })[0] || null;
+    }
+
+    function variant() {
+      var f = fixture();
+      if (!f || S.drain === null) { return null; }
+      return f.variants.filter(function (v) {
+        return v.drain === S.drain;
+      })[0] || null;
+    }
+
+    // With a piece chosen the height follows from it. With none chosen the
+    // customer says what is already there.
+    function standing() {
+      var f = fixture();
+      return f ? f.sits : S.over;
+    }
+
+    // A wall suits the opening if it is built for it, cuts down to it, or
+    // is named as the partner of a piece that fits it.
+    function wallsHere() {
+      var key = S.width + 'x' + S.depth;
+      var mine = here().map(function (f) { return f.number; });
+      return DATA.walls.filter(function (w) {
+        if (w.shape === S.shape && w.w === S.width && w.d === S.depth) { return true; }
+        if (w.fits.indexOf(key) !== -1) { return true; }
+        return w.pairs.some(function (p) { return mine.indexOf(p) !== -1; });
+      });
+    }
+
+    function wallList() {
+      if (S.width === null || S.depth === null) { return []; }
+      var want = standing();
+      return wallsHere().filter(function (w) { return !want || w.over === want; });
+    }
+
+    function wallAt(key) {
+      return wallList().filter(function (w) { return w.number === key; })[0] || null;
+    }
+
+    function wall() {
+      return (!S.wallKey || S.wallKey === 'none') ? null : wallAt(S.wallKey);
+    }
+
+    function cutToFit(w) {
+      return !(w.w === S.width && w.d === S.depth) &&
+             w.fits.indexOf(S.width + 'x' + S.depth) !== -1;
+    }
+
+    // A grab bar panel belongs to the line of the wall, and to one face of
+    // it. The back panel is as wide as the alcove, the side panels as deep.
+    function extraList() {
+      var w = wall();
+      if (!w) { return []; }
+      return DATA.extras.filter(function (e) {
+        if (e.line !== w.line) { return false; }
+        return e.role === 'back' ? e.inches === S.width : e.inches === S.depth;
+      });
+    }
+
+    function extrasOn() {
+      return extraList().filter(function (e) {
+        return S.extras.indexOf(e.number) !== -1;
+      });
+    }
+
+    function baseColors() { var f = fixture(); return f ? f.colors : []; }
+    function wallColors() { var w = wall(); return w ? w.colors : []; }
+
+    // Hold every answer that is still on offer, and drop the ones that are
+    // not. Clearing the whole tail on each click threw away answers that
+    // were still good. Leaving a stale key made a step look answered when
+    // nothing was in fact selected.
+    function clamp() {
+      var f = fixture();
+      if (!f) {
+        S.drain = null;
+      } else {
+        var codes = f.variants.map(function (v) { return v.drain; });
+        if (codes.indexOf(S.drain) === -1) {
+          // One drain position is not a choice. Take it.
+          S.drain = codes.length === 1 ? codes[0] : null;
+        }
+      }
+
+      if (S.wallKey && S.wallKey !== 'none' && !wallAt(S.wallKey)) {
+        S.wallKey = null;
+      }
+
+      var offered = extraList().map(function (e) { return e.number; });
+      S.extras = S.extras.filter(function (n) { return offered.indexOf(n) !== -1; });
+      if (!offered.length) { S.panelsSet = false; }
+
+      var b = baseColors(), c = wallColors();
+      if (b.indexOf(S.baseColor) === -1) { S.baseColor = b[0] || null; }
+      if (c.indexOf(S.wallColor) === -1) { S.wallColor = c[0] || null; }
+      if (!b.length && !c.length) { S.colorSet = false; }
+    }
+
+    // ── Which steps are open, and which are answered ───────────────────
+    function can(id) {
+      var sized = S.width !== null && S.depth !== null;
+      var skipping = S.type === 'none' && !!S.over;
+      if (id === 'alcove') { return true; }
+      if (id === 'piece') { return sized; }
+      if (id === 'drain') {
+        var f = fixture();
+        return !!f && f.variants.length > 1;
+      }
+      if (id === 'wall') { return sized && (skipping || !!fixture()); }
+      if (id === 'panels') { return !!wall() && extraList().length > 0; }
+      if (id === 'color') { return !!fixture() || !!wall(); }
+      return false;
+    }
+
+    function answered(id) {
+      if (id === 'alcove') { return S.width !== null && S.depth !== null; }
+      if (id === 'piece') {
+        return (S.type === 'none' && !!S.over) || !!fixture();
+      }
+      if (id === 'drain') { return S.drain !== null; }
+      if (id === 'wall') { return S.wallKey !== null; }
+      if (id === 'panels') { return S.panelsSet; }
+      if (id === 'color') { return S.colorSet; }
+      return false;
+    }
+
+    function open() { return STEPS.filter(function (s) { return can(s.id); }); }
+
+    function railSteps() {
+      return STEPS.filter(function (s) { return !SOMETIMES[s.id] || can(s.id); });
+    }
+
+    function place(list, id) {
+      var i = -1;
+      list.forEach(function (s, n) { if (s.id === id) { i = n; } });
+      return i;
+    }
+
+    function hop(delta) {
+      var list = open();
+      var t = list[place(list, at) + delta];
+      if (t) { at = t.id; draw(); }
+    }
+
+    // Go to the first step after this one that has no answer yet. Change an
+    // answer that leaves the rest of the build standing and you stay put,
+    // so two models can be compared. Change one that knocks the rest out
+    // and it carries you to the first gap it made.
+    function advance(id) {
+      var list = open();
+      var i = place(list, id);
+      if (i < 0) { return; }
+      for (var n = i + 1; n < list.length; n++) {
+        if (!answered(list[n].id)) { at = list[n].id; return; }
+      }
+    }
+
+    // ── Pieces of a panel ──────────────────────────────────────────────
+    function group(title, node) {
+      var g = el('div', 'seeit-group');
+      if (title) { g.appendChild(el('h3', null, title)); }
+      g.appendChild(node);
+      return g;
+    }
+
+    function tiles(items, active, pick) {
+      if (!items.length) {
+        return el('p', 'seeit-empty', 'Nothing is made in this size.');
+      }
+      var box = el('div', 'seeit-tiles');
+      items.forEach(function (it) {
+        var on = String(it.key) === String(active);
+        var b = el('button', 'tile' + (on ? ' is-on' : ''));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.innerHTML = '<strong>' + it.label + '</strong>' +
+                      (it.note ? '<span>' + it.note + '</span>' : '');
+        b.addEventListener('click', function () { pick(it.key); });
+        box.appendChild(b);
+      });
+      return box;
+    }
+
+    function cards(items, isOn, pick) {
+      if (!items.length) {
+        return el('p', 'seeit-empty', 'Nothing is made in this size.');
+      }
+      var box = el('div', 'seeit-cards');
+      items.forEach(function (it) {
+        var on = isOn(it);
+        var b = el('button', 'mcard' + (on ? ' is-on' : ''));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.innerHTML = '<span class="mc-line">' + it.line + '</span>' +
+                      '<strong class="mc-name">' + it.name + '</strong>' +
+                      (it.size ? '<span class="mc-size">' + it.size + '</span>' : '') +
+                      (it.part ? '<span class="mc-part">' + it.part + '</span>' : '') +
+                      (it.flag ? '<span class="mc-flag">' + it.flag + '</span>' : '');
+        b.addEventListener('click', function () { pick(it.key); });
+        box.appendChild(b);
+      });
+      return box;
+    }
+
+    function swatches(names, active, pick) {
+      if (!names.length) {
+        return el('p', 'seeit-empty', 'Pick a model first.');
+      }
+      var box = el('div', 'seeit-swatches');
+      names.forEach(function (n) {
+        var on = n === active;
+        var b = el('button', 'swatch' + (on ? ' is-on' : ''));
+        b.type = 'button';
+        b.title = n;
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.innerHTML = '<img src="' + DATA.colorImages[n] + '" alt="">' +
+                      '<span>' + n + '</span>';
+        b.addEventListener('click', function () { pick(n); });
+        box.appendChild(b);
+      });
+      return box;
+    }
+
+    function note(text) { return el('p', 'seeit-note-inline', text); }
+
+    function byKey(key) { return function (it) { return it.key === key; }; }
+
+    // ── The panels ─────────────────────────────────────────────────────
+    function widthItems() {
+      var ws = uniq(DATA.fixtures.filter(function (m) {
+        return m.shape === 'alcove';
+      }).map(function (m) { return m.w; })).sort(down);
+      var items = ws.map(function (w) {
+        return {key: 'a' + w, label: w + '″', note: 'wide'};
+      });
+      if (DATA.fixtures.some(function (m) { return m.shape === 'corner'; })) {
+        items.push({key: 'corner', label: 'Corner', note: 'across the corner'});
+      }
+      return items;
+    }
+
+    function depthItems() {
+      if (S.shape === null) { return []; }
+      var list = DATA.fixtures.filter(function (m) {
+        return m.shape === S.shape && (S.shape === 'corner' || m.w === S.width);
+      });
+      return uniq(list.map(function (m) {
+        return S.shape === 'corner' ? m.w : m.d;
+      })).sort(down).map(function (d) {
+        return {key: d, label: d + '″',
+                note: S.shape === 'corner' ? 'along each wall' : 'deep'};
+      });
+    }
+
+    function panelAlcove() {
+      panelBox.appendChild(group('Width, or a corner', tiles(
+        widthItems(),
+        S.shape === 'corner' ? 'corner' : (S.width === null ? '' : 'a' + S.width),
+        function (k) {
+          var shape = k === 'corner' ? 'corner' : 'alcove';
+          var width = k === 'corner' ? null : parseInt(k.slice(1), 10);
+          // Clicking the answer you already gave must not wipe the build.
+          if (S.shape === shape && (shape === 'corner' || S.width === width)) {
+            return;
+          }
+          S.shape = shape; S.width = width;
+          S.depth = null; S.type = null; S.fixKey = null; S.over = null;
+          S.wallKey = null;
+          draw();
+        })));
+
+      if (S.shape !== null) {
+        panelBox.appendChild(group(
+          S.shape === 'corner' ? 'Along each wall' : 'Depth',
+          tiles(depthItems(), S.depth === null ? '' : S.depth, function (k) {
+            if (S.depth === k) { return; }
+            S.depth = k;
+            if (S.shape === 'corner') { S.width = k; }
+            S.type = null; S.fixKey = null; S.over = null; S.wallKey = null;
+            advance('alcove');
+            draw();
+          })));
+      }
+    }
+
+    function panelPiece() {
+      var items = typeList().map(function (t) {
+        var n = here().filter(function (f) { return f.category === t; }).length;
+        return {key: t, label: t, note: n + (n === 1 ? ' model' : ' models')};
+      });
+      // Replacing only the wall is a real job, so it needs a way through.
+      items.push({key: 'none', label: 'None', note: 'wall only'});
+
+      panelBox.appendChild(group('Which piece', tiles(
+        items, S.type === null ? '' : S.type, function (k) {
+          if (S.type === k) { return; }
+          S.type = k; S.fixKey = null; S.over = null; S.wallKey = null;
+          draw();
+        })));
+
+      if (S.type === 'none') {
+        // Skipping the piece still leaves a question: the wall has to be
+        // the right height for whatever is staying. Ask it here, next to
+        // the choice that raised it, not two steps later.
+        panelBox.appendChild(group('What is already there', tiles(
+          ['tall', 'low'].map(function (k) {
+            return {key: k, label: STANDS[k].label, note: STANDS[k].note};
+          }), S.over || '', function (k) {
+            S.over = k; S.wallKey = null;
+            advance('piece');
+            draw();
+          })));
+      } else if (S.type) {
+        panelBox.appendChild(group('Model', cards(
+          ofType().map(function (f) {
+            return {key: f.number, line: f.lineName, name: f.description,
+                    size: f.size, part: f.number};
+          }), byKey(S.fixKey), function (k) {
+            S.fixKey = k;
+            advance('piece');
+            draw();
+          })));
+      }
+    }
+
+    function panelDrain() {
+      var f = fixture();
+      panelBox.appendChild(group(null, tiles(
+        (f ? f.variants : []).map(function (v) {
+          return {key: v.drain, label: v.label, note: v.number};
+        }), S.drain === null ? '' : S.drain, function (k) {
+          S.drain = k;
+          advance('drain');
+          draw();
+        })));
+    }
+
+    function panelWall() {
+      var f = fixture();
+      var stands = standing();
+      panelBox.appendChild(note(f
+        ? 'The ' + f.description.toLowerCase() + ' sets the height, so these ' +
+          'are the walls that go over ' + STANDS[stands].label.toLowerCase() + '.'
+        : 'These are the walls that go over ' +
+          STANDS[stands].label.toLowerCase() + '.'));
+
+      // A few openings have a bathtub or a base but no wall made to match.
+      // Say so, rather than leave one lonely card with no explanation.
+      if (!wallList().length) {
+        panelBox.appendChild(note('No surround is made for a ' + S.width +
+          '″ × ' + S.depth + '″ opening at this height. Call us and we will ' +
+          'go through what else will work.'));
+      }
+
+      var list = wallList().map(function (w) {
+        return {key: w.number, line: w.lineName, name: w.description,
+                size: w.size, part: w.number,
+                flag: cutToFit(w) ? 'Cut to fit' : ''};
+      });
+      list.push({key: 'none', line: 'No surround',
+                 name: 'Keep the walls you have', size: '', part: ''});
+
+      panelBox.appendChild(group('Model', cards(list, byKey(S.wallKey),
+        function (k) {
+          S.wallKey = k;
+          advance('wall');
+          draw();
+        })));
+
+      var w = wall();
+      if (w && f && w.line !== f.line) {
+        panelBox.appendChild(note('This puts a ' + w.lineName + ' wall over a ' +
+          f.lineName + ' ' + f.category.toLowerCase() +
+          '. The sizes match, so the two go together.'));
+      }
+    }
+
+    function panelPanels() {
+      // More than one panel can go on a wall, so this list toggles rather
+      // than picks. It does not carry you on by itself: use Next when the
+      // wall has what you want on it.
+      panelBox.appendChild(group(null, cards(
+        extraList().map(function (e) {
+          return {key: e.number, line: e.lineName, name: e.description,
+                  part: e.number};
+        }),
+        function (it) { return S.extras.indexOf(it.key) !== -1; },
+        function (k) {
+          var i = S.extras.indexOf(k);
+          if (i === -1) { S.extras.push(k); } else { S.extras.splice(i, 1); }
+          S.panelsSet = true;
+          draw();
+        })));
+    }
+
+    function panelColor() {
+      var f = fixture(), w = wall();
+      if (f) {
+        panelBox.appendChild(group(f.category + ', ' + f.description,
+          swatches(baseColors(), S.baseColor, function (n) {
+            S.baseColor = n; S.colorSet = true; advance('color'); draw();
+          })));
+      }
+      if (w) {
+        panelBox.appendChild(group('Wall surround, ' + w.description,
+          swatches(wallColors(), S.wallColor, function (n) {
+            S.wallColor = n; S.colorSet = true; advance('color'); draw();
+          })));
+      }
+      if (f && w) {
+        panelBox.appendChild(note('Each list holds the colors that piece is ' +
+          'made in. The two do not have to match.'));
+      }
+    }
+
+    var PANELS = {alcove: panelAlcove, piece: panelPiece, drain: panelDrain,
+                  wall: panelWall, panels: panelPanels, color: panelColor};
+
+    // ── The rail, the build, and the drawing ───────────────────────────
+    function rail() {
+      railBox.innerHTML = '';
+      railSteps().forEach(function (s, i) {
+        var open_ = s.id === at;
+        var done = answered(s.id);
+        var b = el('button', (open_ ? 'is-here' : '') + (done ? ' is-done' : ''));
+        b.type = 'button';
+        b.disabled = !can(s.id);
+        if (open_) { b.setAttribute('aria-current', 'step'); }
+        b.innerHTML = '<span class="rail-n">' +
+                      (done ? '✓' : (i + 1)) + '</span>' + s.title;
+        b.addEventListener('click', function () { at = s.id; draw(); });
+        railBox.appendChild(b);
+      });
+    }
+
+    function navBar() {
+      var list = open();
+      var i = place(list, at);
+      var bar = el('div', 'seeit-nav');
+
+      var back = el('button', 'seeit-btn', '&larr; Back');
+      back.type = 'button';
+      back.disabled = i <= 0;
+      back.addEventListener('click', function () { hop(-1); });
+
+      var again = el('button', 'seeit-btn', 'Start again');
+      again.type = 'button';
+      again.addEventListener('click', function () { blank(); draw(); });
+
+      var next = el('button', 'seeit-btn seeit-btn-go', 'Next &rarr;');
+      next.type = 'button';
+      next.disabled = i < 0 || i >= list.length - 1;
+      next.addEventListener('click', function () { hop(1); });
+
+      bar.appendChild(back);
+      bar.appendChild(again);
+      bar.appendChild(el('span', 'spacer'));
+      bar.appendChild(next);
+      panelBox.appendChild(bar);
+    }
+
+    function row(term, main, sub) {
+      buildBox.appendChild(el('dt', null, term));
+      buildBox.appendChild(el('dd', main ? null : 'is-empty', main
+        ? main + (sub ? '<span>' + sub + '</span>' : '')
+        : '—'));
+    }
+
+    function build() {
+      var f = fixture(), w = wall(), v = variant(), x = extrasOn();
+      buildBox.innerHTML = '';
+
+      row('Opening', (S.width === null || S.depth === null) ? '' :
+        (S.shape === 'corner'
+          ? S.width + '″ × ' + S.depth + '″ corner'
+          : S.width + '″ × ' + S.depth + '″ alcove'), '');
+
+      if (S.type === 'none') {
+        row('Base', 'None', S.over ? 'Wall only, over ' +
+            STANDS[S.over].label.toLowerCase() : 'Wall only');
+      } else {
+        // Until the drain is picked the part number is still the pair, so
+        // show the pair. Naming one of them would be a choice nobody made.
+        row(f ? f.category : 'Base', f ? (v ? v.number : f.number) : '',
+            f ? f.lineName + ' · ' + f.size +
+                (v && v.drain ? ' · ' + v.label + ' drain' : '') +
+                (S.baseColor ? ' · ' + S.baseColor : '') : '');
+      }
+
+      row('Surround', w ? w.number : (S.wallKey === 'none' ? 'None' : ''),
+          w ? w.lineName + ' · ' + w.size +
+              (S.wallColor ? ' · ' + S.wallColor : '') : '');
+
+      row('Grab bars',
+          x.length ? x.map(function (e) { return e.number; }).join('  ')
+                   : (S.panelsSet || S.wallKey === 'none' ? 'None' : ''),
+          x.length ? x.map(function (e) { return e.description; }).join(', ') : '');
+    }
+
+    // ── The viewer ─────────────────────────────────────────────────────
+    // Everything above this line is about products. Everything below hands
+    // the answer to whatever is drawing it. The whole contract is update()
+    // and dispose(), so a hosted configurator could take the same job over
+    // without any of the logic above knowing.
+    function forViewer() {
+      var f = fixture(), w = wall();
+      return {
+        shape: S.shape || 'alcove',
+        opening: {w: S.width || 60, d: S.depth || 32},
+        fixture: f ? {part: f.number, box: f.box, category: f.category,
+                      sits: f.sits, color: S.baseColor} : null,
+        wall: w ? {part: w.number, box: w.box, color: S.wallColor} : null,
+        bars: extrasOn().map(function (e) { return e.role; })
+      };
+    }
+
+    // No WebGL, or the library did not load. Fall back to the still that
+    // was rendered for this part.
+    function flatShot() {
+      var f = fixture(), w = wall(), piece = f || w;
+      if (!shot) {
+        viewBox.innerHTML = '';
+        shot = document.createElement('img');
+        shot.className = 'seeit-shot';
+        shot.addEventListener('error', function () {
+          shot.classList.add('is-blank');
+        });
+        shot.addEventListener('load', function () {
+          shot.classList.remove('is-blank');
+        });
+        viewBox.appendChild(shot);
+      }
+      shot.alt = piece ? piece.lineName + ' ' + piece.description : '';
+      shot.src = '../images/renders/' +
+                 (piece ? piece.number.split(' / ')[0] : 'room') + '.jpg';
+    }
+
+    function scene() {
+      if (mode === '3d' && viewer) { viewer.update(forViewer()); }
+      else if (mode === 'flat') { flatShot(); }
+
+      var f = fixture(), w = wall();
+      var say = [];
+      if (w) {
+        say.push(w.lineName + ' ' + w.description.toLowerCase() +
+                 (S.wallColor ? ' in ' + S.wallColor : ''));
+      }
+      if (f) {
+        say.push(f.lineName + ' ' + f.description.toLowerCase() +
+                 (S.baseColor ? ' in ' + S.baseColor : ''));
+      }
+      caption.textContent = say.length
+        ? say.join(', over the ') + '.'
+        : 'Pick the size of your opening to start.';
+    }
+
+    function draw() {
+      clamp();
+      // A step can close under you when an earlier answer changes. Fall
+      // back to the last step that is still open.
+      if (!can(at)) {
+        var list = open();
+        at = list.length ? list[list.length - 1].id : 'alcove';
+      }
+      rail();
+      var s = STEPS.filter(function (x) { return x.id === at; })[0];
+      panelBox.innerHTML = '';
+      panelBox.appendChild(el('h2', null, s.head));
+      panelBox.appendChild(el('p', 'panel-hint', s.hint));
+      PANELS[at]();
+      navBar();
+      build();
+      scene();
+    }
+
+    // Bring the room up if the browser can hold it. Nothing here can stop
+    // the wizard: every path ends with a picture and a part number.
+    (function start() {
+      var loading = $('seeit-loading');
+      function settled(next) {
+        mode = next;
+        if (loading && loading.parentNode) { loading.parentNode.removeChild(loading); }
+        scene();
+      }
+      import('../js/seeit-3d.js').then(function (lib) {
+        if (!lib.supported()) { throw new Error('this browser has no WebGL'); }
+        viewBox.innerHTML = '';
+        return lib.createViewer(viewBox, {
+          modelPath: '../models/',
+          models: DATA.models,
+          textures: DATA.colorImages
+        });
+      }).then(function (v) {
+        viewer = v;
+        settled('3d');
+      }).catch(function () {
+        settled('flat');
+      });
+    })();
+
+    blank();
+    draw();
+  })();
+
+  </script>
+</body>
+</html>
