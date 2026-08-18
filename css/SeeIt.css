@@ -21,10 +21,14 @@
   text-align: center;
 }
 
+/* line-height rather than the inherited 1.6, which on a 1.9rem heading is
+   nearly 50px of box for 30px of letters. Every pixel here comes off the
+   picture below it. */
 .seeit-head h1 {
   margin: 0.25rem 0 0.35rem;
   color: var(--surface);
   font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1.15;
 }
 
 .seeit-head p {
@@ -35,8 +39,10 @@
   color: var(--surface-alt);
 }
 
+/* Scoped, so the twelve line pages keep the 0.75rem they were built with. */
 .seeit-head .line-eyebrow {
   color: var(--surface-alt);
+  margin-bottom: 0.4rem;
 }
 
 /* ── Viewer first ─────────────────────────────────────────────────────
@@ -45,8 +51,10 @@
 
    Full width rather than inside .container, because the one thing a
    configurator cannot have too much of is picture. */
+/* The gap at the top is deliberate: the picture butted straight onto the blue
+   header and the two read as one block. */
 .seeit-app {
-  padding: 0 0 3rem;
+  padding: 1rem 0 3rem;
   background: var(--light);
 }
 
@@ -471,18 +479,32 @@
    arrives and stop the page jumping when it does. Wider than it was, and
    capped by viewport height so the whole room is on screen at once without
    scrolling to see the bottom of it. */
-/* 16/9 is the shape it wants; the two caps are what it settles for. The
-   height cap keeps the whole room on screen under the header without
-   scrolling, and resize() reads the height that comes out of all this rather
-   than assuming any of it. dvh second, so it wins where it is supported and
-   is simply ignored where it is not — on a phone it accounts for the address
-   bar, which vh does not. */
+/* 16/9 is the shape it wants; the height cap is what it settles for, so that
+   the whole room is on screen when the page opens.
+
+   23rem is what sits above it, measured rather than guessed:
+
+     .top-bar            2.7rem   0.6rem padding twice, one line at 0.95/1.6
+     .header             7.8rem   1.4rem padding twice around an 80px logo,
+                                  and it is position: sticky, so this space
+                                  is never given back by scrolling
+     .seeit-head        10.6rem   padding, eyebrow, h1, and three lines of p
+     .seeit-app padding  1.0rem   the gap above the picture
+                        -------
+                        22.1rem   rounded up to 23 for a little air
+
+   It was 13rem, which left the bottom of the picture below the fold.
+   resize() reads whatever height comes out of this rather than assuming any
+   of it, so the two cannot disagree.
+
+   dvh second, so it wins where supported and is ignored where not: on a phone
+   it accounts for the address bar, which vh does not. */
 .seeit-view {
   position: relative;
   aspect-ratio: 16 / 9;
-  max-height: calc(100vh - 13rem);
-  max-height: calc(100dvh - 13rem);
-  min-height: 22rem;
+  max-height: calc(100vh - 23rem);
+  max-height: calc(100dvh - 23rem);
+  min-height: 18rem;
   background: var(--alt);
   overflow: hidden;
 }
@@ -801,9 +823,13 @@
     box-shadow: var(--shadow-card);
   }
 
+  /* A fraction of the screen rather than a subtraction, because the header
+     and the heading both wrap differently at this width and there is no one
+     number for them. 60% leaves the wizard sheet the other 40%. */
   .seeit-view {
     aspect-ratio: 4 / 3;
     max-height: 60vh;
+    max-height: 60dvh;
     min-height: 0;
   }
 
