@@ -768,12 +768,22 @@
     // and dispose(), so a hosted configurator could take the same job over
     // without any of the logic above knowing.
     function forViewer() {
-      var f = fixture(), w = wall();
+      var f = fixture(), w = wall(), v = variant();
+      // A left drain and a right drain are one moulding, handed. Only the
+      // first number the workbook lists is exported, so any other drain is
+      // that model mirrored, and the renderer is told which.
+      //
+      // Compared against the merged number, not against variants[0]:
+      // DRAIN_ORDER sorts L first for the wizard, while the file is named
+      // after whichever the workbook wrote first, which is the R in every
+      // pair. Testing variants[0] would hand every base the wrong way.
+      var handed = !!f && !!v && v.number !== f.number.split(' / ')[0];
       return {
         shape: S.shape || 'alcove',
         opening: {w: S.width || 60, d: S.depth || 32},
         fixture: f ? {part: f.number, box: f.box, category: f.category,
-                      sits: f.sits, color: S.baseColor} : null,
+                      sits: f.sits, color: S.baseColor,
+                      mirror: handed} : null,
         wall: w ? {part: w.number, box: w.box, color: S.wallColor} : null,
         bars: extrasOn().map(function (e) { return e.role; }),
         room: S.room

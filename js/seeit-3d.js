@@ -15,7 +15,7 @@
        {
          shape:   'alcove' | 'corner',
          opening: { w, d },
-         fixture: { part, box:[w,d,h], category, sits, color } | null,
+         fixture: { part, box:[w,d,h], category, sits, color, mirror } | null,
          wall:    { part, box:[w,d,h], color } | null,
          bars:    [ 'back' | 'side', ... ],
          room:    '<room id>' | null
@@ -24,6 +24,11 @@
    room names one of the rooms declared in options.rooms. Anything else,
    including null, draws the plain alcove the viewer builds itself. A room is
    scenery: it is never part of the build list and never priced.
+
+   mirror hands the fixture. A left-drain base and a right-drain base are the
+   same moulding reversed, so only one is exported and the other is drawn from
+   it. The page decides which, because which number was exported is a fact
+   about the workbook, not about drawing.
 
    Geometry is generated from those numbers. When a Blender export exists
    at models/<part>.glb it is loaded and used instead, so the two can live
@@ -699,13 +704,17 @@ export async function createViewer(mount, options = {}) {
       paint(made.obj, mat);
       parts.add(made.obj);
 
-      // A seated base closes one end off at the rim.
+      // A seated base closes one end off at the rim. The seat is at the drain
+      // end, so it changes sides with the drain: on WBSL...R / WBSR...L the
+      // workbook flips the seat letter and the drain letter together.
       if (f.category === 'Seated Base') {
         const sw = Math.min(17, w * 0.32);
+        const hand = f.mirror ? 1 : -1;
         const seatGeo = rounded(sw, d - 2 * WALL_T, rim - WALL_T, 1);
         boxUV(seatGeo);                      // built here, so painted here
         const seat = new THREE.Mesh(seatGeo, mat);
-        seat.position.set(-w / 2 + WALL_T + sw / 2, (rim - WALL_T) / 2, -d / 2);
+        seat.position.set(hand * (w / 2 - WALL_T - sw / 2),
+                          (rim - WALL_T) / 2, -d / 2);
         // Both, the way paint() sets them. This mesh is built here rather than
         // inside the group, so it has to say so itself.
         seat.castShadow = seat.receiveShadow = true;
@@ -795,7 +804,7 @@ export async function createViewer(mount, options = {}) {
       // box[0] is the part's own width from the workbook. It is what the unit
       // has to be read against, not the opening: see fit().
       return fit(gltfCache.get(url).scene.clone(true), w, d,
-                 (spec.box && spec.box[0]) || w, sink);
+                 (spec.box && spec.box[0]) || w, sink, !!spec.mirror);
     } catch (err) {
       // A missing loader stops every part. A bad file stops only that one.
       if (!GLTF) { gltfOff = true; } else { gltfCache.set(url, false); }
@@ -827,7 +836,7 @@ export async function createViewer(mount, options = {}) {
   // Height is therefore read off the model rather than the workbook. A
   // nominal size leaves out the flange, so a 3-1/2 in. base measures nearer
   // 5, and the surround above it has to stack on what is really there.
-  function fit(root, w, d, trueWidth, sink = 0) {
+  function fit(root, w, d, trueWidth, sink = 0, mirror = false) {
     const holder = new THREE.Group();
     holder.add(root);
     root.updateMatrixWorld(true);
@@ -836,6 +845,17 @@ export async function createViewer(mount, options = {}) {
       .getSize(new THREE.Vector3());
     const unit = span.x > 1e-9 ? snapUnit((trueWidth || w) / span.x) : 1;
     if (span.x > 1e-9) { root.scale.setScalar(unit); }
+
+    // A drain on the other hand is the same moulding reversed, so one export
+    // covers both. A negative scale on X does it, and three.js keeps that
+    // honest: the renderer tests each mesh's world matrix and flips the
+    // front-face winding when the determinant goes negative, so nothing is
+    // culled inside out, and the normal matrix being an inverse transpose
+    // means the lighting turns with it.
+    //
+    // Before the bounding box is taken, so that the centring and the placement
+    // below measure the handed shape rather than the original.
+    if (mirror) { root.scale.x = -root.scale.x; }
     root.updateMatrixWorld(true);
 
     // The unit is not carried onward. paint() needs the local-to-world scale
