@@ -38,6 +38,17 @@ const WALL_T = 3;            // the wall of a tub or a pan
 const APRON_R = 1.5;         // the radius on a rim
 const BAR_R = 0.7;           // a grab bar
 
+// A moulded surround carries a nail flange along its front and top edges. It
+// is what the panel is fixed through, and the wall finish is brought over it,
+// so on a finished wall none of it is in the room. A Blender export has the
+// flange modelled, which put the front face of a surround about 0.9 in. proud
+// of the wall it is supposed to be set into. The piece is sunk by this much so
+// the flange finishes behind the wall face, where it ends up on site.
+//
+// A base is not sunk. Its flange is on the back and the two ends, and its
+// apron is a finished face that sits flush with the wall below it.
+const FLANGE_IN = 1;
+
 // How much product one colour tile covers. Every textured surface carries
 // UVs measured in inches, so this one number sets the density everywhere.
 // See boxUV().
@@ -658,8 +669,10 @@ export async function createViewer(mount, options = {}) {
     if (wall) {
       const nominal = wall.box[2] || 59;
       const mat = finish(wall.color);
+      // Sunk by the flange. The base above is not: see FLANGE_IN.
       const made = await piece(wall, w, d,
-                               () => ({ obj: panels(w, d, nominal), h: nominal }));
+                               () => ({ obj: panels(w, d, nominal), h: nominal }),
+                               FLANGE_IN);
       made.obj.position.y = rim;
       paint(made.obj, mat);
       parts.add(made.obj);
@@ -704,8 +717,11 @@ export async function createViewer(mount, options = {}) {
   // from the numbers, so the page works before the exports are finished.
   // Either way the answer is the same pair: the thing, and how tall it
   // turned out, because the next piece up has to sit on it.
+  // sink is how far into the alcove the piece is set past its own rear face,
+  // to bury a modelled nail flange. Only an export has one; a generated shape
+  // is built to the finished size and passes 0.
   let gltfOff = false;
-  async function piece(spec, w, d, fallback) {
+  async function piece(spec, w, d, fallback, sink = 0) {
     const key = spec.part.split(' / ')[0];
     if (gltfOff || !exported.has(key)) { return fallback(); }
     const url = opts.modelPath + key + '.glb';
@@ -730,7 +746,7 @@ export async function createViewer(mount, options = {}) {
       // box[0] is the part's own width from the workbook. It is what the unit
       // has to be read against, not the opening: see fit().
       return fit(gltfCache.get(url).scene.clone(true), w, d,
-                 (spec.box && spec.box[0]) || w);
+                 (spec.box && spec.box[0]) || w, sink);
     } catch (err) {
       // A missing loader stops every part. A bad file stops only that one.
       if (!GLTF) { gltfOff = true; } else { gltfCache.set(url, false); }
@@ -762,7 +778,7 @@ export async function createViewer(mount, options = {}) {
   // Height is therefore read off the model rather than the workbook. A
   // nominal size leaves out the flange, so a 3-1/2 in. base measures nearer
   // 5, and the surround above it has to stack on what is really there.
-  function fit(root, w, d, trueWidth) {
+  function fit(root, w, d, trueWidth, sink = 0) {
     const holder = new THREE.Group();
     holder.add(root);
     root.updateMatrixWorld(true);
@@ -784,11 +800,13 @@ export async function createViewer(mount, options = {}) {
     // safe on geometry the cache shares between clones.
 
     // X centred in the opening, Y on the floor, and Z pushed back until the
-    // rear face meets the back wall. Back-aligned rather than centred, so
-    // that a front return sticks out into the room instead of being buried.
+    // rear face meets the back wall — then sink further by however much of the
+    // front is nail flange, so that what is left in the room is what a
+    // finished wall leaves in the room. Back-aligned rather than centred,
+    // because the back is the face with something to register against.
     const box = new THREE.Box3().setFromObject(root);
     const mid = box.getCenter(new THREE.Vector3());
-    root.position.set(-mid.x, -box.min.y, -d - box.min.z);
+    root.position.set(-mid.x, -box.min.y, -d - box.min.z - sink);
     root.updateMatrixWorld(true);
 
     return { obj: holder, h: box.max.y - box.min.y };
