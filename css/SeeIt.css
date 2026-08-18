@@ -3,9 +3,12 @@
    Loads after styles.css and Lines.css.
    Every color comes from the tokens in styles.css :root.
 
-   Layout: a wizard on the left, a sticky drawing on the right.
-   One step is open at a time, so the panel gets the full column
-   width and the tiles sit four or five across instead of two.
+   Layout: viewer first. The picture is the page; the wizard docks over
+   it on a wide screen and becomes a sheet under it on a narrow one. The
+   caption and the part numbers sit below. One step is open at a time.
+
+   The ids in Products/SeeIt.html are the contract with SEEIT_JS, which
+   writes into them. Rearranging the markup is safe; renaming is not.
    ============================================================ */
 
 /* ── Head ─────────────────────────────────────────────────────────────
@@ -47,9 +50,13 @@
   background: var(--light);
 }
 
+/* Capped, because full bleed on an ultrawide monitor makes the room enormous
+   and shrinks the dock to a sliver of the width beside it. */
 .seeit-stage {
   position: relative;
   min-width: 0;
+  max-width: 120rem;
+  margin: 0 auto;
   background: var(--alt);
 }
 
@@ -62,7 +69,10 @@
   right: 1.25rem;
   z-index: 2;
   width: min(24rem, 40vw);
-  max-height: calc(100% - 2.5rem);
+  /* Stops short of the zoom buttons below it, which are 2.2rem each plus
+     their own 1.25rem inset. The panel scrolls inside itself, so a shorter
+     dock hides nothing. */
+  max-height: calc(100% - 8rem);
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-md);
@@ -307,6 +317,13 @@
   color: var(--surface);
 }
 
+/* The note is secondary, so it does not go all the way to white, but the
+   muted grey it carries unselected is 1.4:1 on this background and simply
+   vanishes. This is 8:1 and still reads as the quieter line. */
+.mcard.is-on .mc-note {
+  color: var(--surface-alt);
+}
+
 /* A wall that is wider than the alcove and cuts down to it. */
 /* Free text for a fit that is not a dimension, so it sits under the size it
    is accounting for and reads as prose rather than as a measurement. */
@@ -454,13 +471,60 @@
    arrives and stop the page jumping when it does. Wider than it was, and
    capped by viewport height so the whole room is on screen at once without
    scrolling to see the bottom of it. */
+/* 16/9 is the shape it wants; the two caps are what it settles for. The
+   height cap keeps the whole room on screen under the header without
+   scrolling, and resize() reads the height that comes out of all this rather
+   than assuming any of it. dvh second, so it wins where it is supported and
+   is simply ignored where it is not — on a phone it accounts for the address
+   bar, which vh does not. */
 .seeit-view {
   position: relative;
   aspect-ratio: 16 / 9;
-  max-height: calc(100vh - 12rem);
-  min-height: 24rem;
+  max-height: calc(100vh - 13rem);
+  max-height: calc(100dvh - 13rem);
+  min-height: 22rem;
   background: var(--alt);
   overflow: hidden;
+}
+
+/* ── Zoom ─────────────────────────────────────────────────────────────
+   Built by the viewer, not by the page, so these classes are set in
+   js/seeit-3d.js. Bottom right, opposite the room picker and clear of the
+   dock above it. */
+.seeit-zoom {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.zoom-btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 0;
+  background: var(--surface);
+  color: var(--primary);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.zoom-btn:hover {
+  background: var(--alt);
+}
+
+.zoom-btn:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: -3px;
 }
 
 .seeit-canvas {
@@ -530,6 +594,9 @@
   left: 1.25rem;
   bottom: 1.25rem;
   z-index: 2;
+  /* Cannot run along under the zoom buttons on the other side, however many
+     rooms get added. */
+  max-width: calc(100% - 6.5rem);
   display: flex;
   flex-wrap: wrap;
   align-items: center;

@@ -82,10 +82,8 @@ export async function createViewer(mount, options = {}) {
   const renderer = new THREE.WebGLRenderer({
     antialias: true, alpha: false, powerPreference: 'high-performance'
   });
-  // Cap harder on small screens: a 3x phone filling a half-height canvas is
-  // still > 2M pixels. 1.5 is enough for gelcoat specular without the cost.
-  const prCap = (mount.clientWidth || 640) < 700 ? 1.5 : 2;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, prCap));
+  // The pixel ratio cap is decided in resize(), because it depends on how
+  // wide the canvas actually is and that changes when a phone is turned.
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -224,28 +222,65 @@ export async function createViewer(mount, options = {}) {
     camera.lookAt(target);
   }
 
-  let drag = null;
+  // ── Zoom ───────────────────────────────────────────────────────────
+  // One way in for every gesture: a wheel, a pinch, the two buttons, and the
+  // plus and minus keys all come through here, so they cannot drift apart or
+  // escape the limits frame() set.
+  const ZOOM_STEP = 1.18;
+
+  function zoomBy(mult) {
+    const next = clamp(orbit.r * mult, rBase * LIMIT.rLo, rBase * LIMIT.rHi);
+    if (next === orbit.r) { return; }
+    orbit.r = next;
+    place();
+    render();
+  }
+
   const el = renderer.domElement;
   el.style.touchAction = 'none';
 
+  // Every pointer currently down, so two of them can be told from one.
+  const pts = new Map();
+  let pinch = 0;
+
+  function spread() {
+    const [a, b] = [...pts.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
   el.addEventListener('pointerdown', (e) => {
-    drag = { x: e.clientX, y: e.clientY };
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     el.setPointerCapture(e.pointerId);
     el.classList.add('is-dragging');
+    if (pts.size === 2) { pinch = spread(); }
   });
+
   el.addEventListener('pointermove', (e) => {
-    if (!drag) { return; }
-    orbit.theta = clamp(orbit.theta - (e.clientX - drag.x) * 0.006,
+    const prev = pts.get(e.pointerId);
+    if (!prev) { return; }
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // Two fingers is a pinch, not a turn. Turning on a pinch makes the room
+    // lurch sideways while the customer is only trying to get closer.
+    if (pts.size >= 2) {
+      const now = spread();
+      if (pinch > 0 && now > 0) { zoomBy(pinch / now); }
+      pinch = now;
+      return;
+    }
+
+    orbit.theta = clamp(orbit.theta - (e.clientX - prev.x) * 0.006,
                         -LIMIT.theta, LIMIT.theta);
-    orbit.phi = clamp(orbit.phi - (e.clientY - drag.y) * 0.005,
+    orbit.phi = clamp(orbit.phi - (e.clientY - prev.y) * 0.005,
                       LIMIT.phiLo, LIMIT.phiHi);
-    drag = { x: e.clientX, y: e.clientY };
     place();
     render();
   });
+
   const stop = (e) => {
-    drag = null;
-    el.classList.remove('is-dragging');
+    pts.delete(e.pointerId);
+    if (pts.size < 2) { pinch = 0; }
+    if (!pts.size) { el.classList.remove('is-dragging'); }
     if (e.pointerId !== undefined && el.hasPointerCapture(e.pointerId)) {
       el.releasePointerCapture(e.pointerId);
     }
@@ -255,22 +290,42 @@ export async function createViewer(mount, options = {}) {
 
   el.addEventListener('wheel', (e) => {
     e.preventDefault();
-    orbit.r = clamp(orbit.r * (1 + Math.sign(e.deltaY) * 0.08),
-                    rBase * LIMIT.rLo, rBase * LIMIT.rHi);
-    place();
-    render();
+    zoomBy(1 + Math.sign(e.deltaY) * 0.08);
   }, { passive: false });
+
+  // The buttons are built here because the canvas is built here, so the page
+  // needs to know nothing about them and the two-call contract is untouched.
+  // A hosted configurator would bring its own.
+  const zoomBox = document.createElement('div');
+  zoomBox.className = 'seeit-zoom';
+  for (const [glyph, label, mult] of [
+    ['+', 'Zoom in', 1 / ZOOM_STEP],
+    ['−', 'Zoom out', ZOOM_STEP]
+  ]) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'zoom-btn';
+    b.textContent = glyph;
+    b.setAttribute('aria-label', label);
+    b.addEventListener('click', () => zoomBy(mult));
+    zoomBox.appendChild(b);
+  }
+  mount.appendChild(zoomBox);
 
   // The keyboard gets the same movement, since the page is otherwise
   // entirely operable without a mouse.
   el.tabIndex = 0;
   el.setAttribute('role', 'img');
   el.setAttribute('aria-label',
-    'Your bathroom, drawn. Drag or use the arrow keys to turn it. ' +
-    'What is in it is written under the picture.');
+    'Your bathroom, drawn. Drag or use the arrow keys to turn it, ' +
+    'and the plus and minus keys to zoom. What is in it is written ' +
+    'under the picture.');
   el.addEventListener('keydown', (e) => {
     const step = 0.09;
-    if (e.key === 'ArrowLeft') { orbit.theta = clamp(orbit.theta + step, -LIMIT.theta, LIMIT.theta); }
+    // Zoom first: these two already clamp and redraw themselves.
+    if (e.key === '+' || e.key === '=') { zoomBy(1 / ZOOM_STEP); }
+    else if (e.key === '-' || e.key === '_') { zoomBy(ZOOM_STEP); }
+    else if (e.key === 'ArrowLeft') { orbit.theta = clamp(orbit.theta + step, -LIMIT.theta, LIMIT.theta); }
     else if (e.key === 'ArrowRight') { orbit.theta = clamp(orbit.theta - step, -LIMIT.theta, LIMIT.theta); }
     else if (e.key === 'ArrowUp') { orbit.phi = clamp(orbit.phi - step, LIMIT.phiLo, LIMIT.phiHi); }
     else if (e.key === 'ArrowDown') { orbit.phi = clamp(orbit.phi + step, LIMIT.phiLo, LIMIT.phiHi); }
@@ -281,10 +336,31 @@ export async function createViewer(mount, options = {}) {
   });
 
   // ── Size ───────────────────────────────────────────────────────────
+  // The shape of the box is the stylesheet's business. This reads it rather
+  // than imposing a ratio of its own: the two disagreed — 0.72 here against
+  // 16/9 in the CSS — and the canvas came out 28% taller than the box that
+  // clipped it.
+  //
+  // setSize's third argument is false, so three.js writes no inline width or
+  // height. The canvas is sized to 100% by the stylesheet instead, which
+  // keeps the ResizeObserver from watching a box the canvas is itself
+  // resizing.
+  let prCap = 0;
+
   function resize() {
     const w = mount.clientWidth || 640;
-    const h = Math.round(w * 0.72);
-    renderer.setSize(w, h, true);
+    const h = mount.clientHeight || Math.round(w * 0.5625);
+
+    // Decided here, not once at startup: turning a phone to landscape can
+    // cross this line in either direction. Only set when it changes, because
+    // setPixelRatio reallocates the drawing buffer.
+    const cap = w < 700 ? 1.5 : 2;
+    if (cap !== prCap) {
+      prCap = cap;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cap));
+    }
+
+    renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     render();
@@ -310,10 +386,16 @@ export async function createViewer(mount, options = {}) {
       raf = requestAnimationFrame(tick);
     }
   }
-  document.addEventListener('visibilitychange', () => {
+  // Named, because dispose() has to take it off again. Every other listener
+  // here is on the canvas and goes when the canvas does; this one is on
+  // document, so left attached it would hold this whole closure — renderer,
+  // scene, caches and all — reachable for the life of the page, and
+  // dispose() would not give anything back.
+  function onVisible() {
     if (!alive) { return; }
     if (!document.hidden) { render(); }
-  });
+  }
+  document.addEventListener('visibilitychange', onVisible);
 
 
   // ── Build the room ─────────────────────────────────────────────────
@@ -820,6 +902,7 @@ export async function createViewer(mount, options = {}) {
   function dispose() {
     alive = false;
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    document.removeEventListener('visibilitychange', onVisible);
     ro.disconnect();
     clear(room);
     clear(parts);
