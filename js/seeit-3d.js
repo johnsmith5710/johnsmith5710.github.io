@@ -38,16 +38,23 @@ const WALL_T = 3;            // the wall of a tub or a pan
 const APRON_R = 1.5;         // the radius on a rim
 const BAR_R = 0.7;           // a grab bar
 
-// A moulded surround carries a nail flange along its front and top edges. It
-// is what the panel is fixed through, and the wall finish is brought over it,
-// so on a finished wall none of it is in the room. A Blender export has the
-// flange modelled, which put the front face of a surround about 0.9 in. proud
-// of the wall it is supposed to be set into. The piece is sunk by this much so
-// the flange finishes behind the wall face, where it ends up on site.
+// A moulded piece carries a nail flange along its edges. It is what the piece
+// is fixed through, and the wall finish is brought over it, so on a finished
+// wall none of it is in the room. An export has the flange modelled, which put
+// the front face of a surround about 0.9 in. proud of the wall it is supposed
+// to be set into. Base and surround are both sunk by this much, so the two
+// bear on the same plane, the way they do on a stud.
 //
-// A base is not sunk. Its flange is on the back and the two ends, and its
-// apron is a finished face that sits flush with the wall below it.
+// Sinking alone is not enough: the room's back wall is opaque, so a piece
+// pushed into it loses its own back panel behind the wall. plainRoom() pockets
+// the niche by the same amount to give it somewhere to go. The pocket stops at
+// the top of the installation, because that face is what the top flange beds
+// against and a step above the surround would show.
 const FLANGE_IN = 1;
+// Nothing should be exactly coplanar with anything else. A generated side
+// panel's outer face lands on the opening line, which is where the niche wall
+// is, and two surfaces at the same depth flicker against each other.
+const SKIN = 0.03;
 
 // How much product one colour tile covers. Every textured surface carries
 // UVs measured in inches, so this one number sets the density everywhere.
@@ -417,14 +424,14 @@ export async function createViewer(mount, options = {}) {
   // A named room is tried first and the plain alcove stands in whenever one
   // is not asked for, is not on offer, or does not load. The room is only
   // ever scenery, so nothing about the products depends on which one it is.
-  async function drawRoom(w, d, want, corner) {
+  async function drawRoom(w, d, want, corner, sunkTop) {
     clear(room);
     const made = want ? await roomModel(want, d) : null;
     if (made) {
       room.add(made);
       return;
     }
-    plainRoom(w, d, corner);
+    plainRoom(w, d, corner, sunkTop);
   }
 
   const roomCache = new Map();
@@ -496,7 +503,7 @@ export async function createViewer(mount, options = {}) {
   //
   // A corner unit is not in an alcove and gets no return. Two of the room's
   // own walls meet behind it and the floor opens out to one side.
-  function plainRoom(w, d, corner) {
+  function plainRoom(w, d, corner, sunkTop) {
     const jamb = corner ? 0 : JAMB_W;      // wall either side of the mouth
     const x0 = corner ? -w / 2 : -w / 2 - jamb;
     const x1 = corner ? -w / 2 + w + CORNER_OPEN : w / 2 + jamb;
@@ -529,19 +536,56 @@ export async function createViewer(mount, options = {}) {
 
     // The back of the niche is only as wide as the niche. Past that it is
     // behind a jamb and never seen.
+    //
+    // Where something is installed it is pocketed by the flange depth, so a
+    // sunk piece has somewhere to sit instead of losing its own back panel
+    // behind an opaque wall. The pocket stops at the top of the installation:
+    // above that line the wall comes forward to the original plane, because
+    // that is the face the top flange beds against, and a step left in the
+    // open above the surround would be the first thing you noticed.
     const backW = corner ? fw : w;
-    const back = new THREE.Mesh(new THREE.PlaneGeometry(backW, ROOM_H), roomMat);
-    back.position.set(corner ? midX : 0, ROOM_H / 2, z0);
-    back.receiveShadow = true;
-    room.add(back);
+    const backX = corner ? midX : 0;
+    const pocket = sunkTop > 0 ? FLANGE_IN : 0;
+    const zPocket = z0 - pocket;
+
+    if (pocket > 0) {
+      const lower = new THREE.Mesh(
+        new THREE.PlaneGeometry(backW, sunkTop), roomMat);
+      lower.position.set(backX, sunkTop / 2, zPocket);
+      lower.receiveShadow = true;
+      room.add(lower);
+
+      const upper = new THREE.Mesh(
+        new THREE.PlaneGeometry(backW, ROOM_H - sunkTop), roomMat);
+      upper.position.set(backX, sunkTop + (ROOM_H - sunkTop) / 2, z0);
+      upper.receiveShadow = true;
+      room.add(upper);
+
+      // The soffit closing the step, facing down onto the top of the piece.
+      const soffit = new THREE.Mesh(
+        new THREE.PlaneGeometry(backW, pocket), roomMat);
+      soffit.rotation.x = Math.PI / 2;
+      soffit.position.set(backX, sunkTop, z0 - pocket / 2);
+      soffit.receiveShadow = true;
+      room.add(soffit);
+    } else {
+      const back = new THREE.Mesh(new THREE.PlaneGeometry(backW, ROOM_H), roomMat);
+      back.position.set(backX, ROOM_H / 2, z0);
+      back.receiveShadow = true;
+      room.add(back);
+    }
 
     if (jamb > 0) {
       // The two walls of the niche, stopping at its mouth rather than running
-      // on. These are what the surround's end panels meet.
+      // on. These are what the surround's end panels meet, held out by SKIN so
+      // the two faces are never at exactly the same depth.
+      const nicheD = d + pocket;
       for (const inward of [1, -1]) {
-        const side = new THREE.Mesh(new THREE.PlaneGeometry(d, ROOM_H), roomMat);
+        const side = new THREE.Mesh(
+          new THREE.PlaneGeometry(nicheD, ROOM_H), roomMat);
         side.rotation.y = inward * Math.PI / 2;
-        side.position.set(inward * -w / 2, ROOM_H / 2, z0 + d / 2);
+        side.position.set(inward * (-(w / 2) - SKIN), ROOM_H / 2,
+                          zPocket + nicheD / 2);
         side.receiveShadow = true;
         room.add(side);
       }
@@ -624,9 +668,12 @@ export async function createViewer(mount, options = {}) {
   }
 
   // ── Build the products ─────────────────────────────────────────────
+  // Answers with two heights. camTop is what the camera has to take in.
+  // sunkTop is how far up the pocket behind the pieces has to run, and is 0
+  // when there is nothing installed to hide it.
   async function drawParts() {
     clear(parts);
-    if (!build) { return; }
+    if (!build) { return { camTop: 40, sunkTop: 0 }; }
 
     const w = build.opening.w;
     const d = build.opening.d;
@@ -643,7 +690,7 @@ export async function createViewer(mount, options = {}) {
         obj: vessel(f.box[0] || w, f.box[1] || d, nominal,
                     build.shape === 'corner'),
         h: nominal
-      }));
+      }), FLANGE_IN);
       // The rim is wherever the piece actually ends, not where the nominal
       // size says it should. The exported base is a shade over 4 in. tall
       // against a 3-1/2 in. nominal, and the surround has to meet it.
@@ -688,7 +735,9 @@ export async function createViewer(mount, options = {}) {
       }
     }
 
-    frame(w, d, top);
+    // frame() is called by update() once the room is up, because it moves the
+    // camera and the camera is clamped against the room's front edge.
+    return { camTop: top, sunkTop: (f || wall) ? top : 0 };
   }
 
   // Three flat panels and a shelf, standing on y = 0. Used when the wall
@@ -961,11 +1010,18 @@ export async function createViewer(mount, options = {}) {
       // rest of this would then add parts to a torn-down scene and reach for
       // a renderer that has given its context back.
       if (!alive || build !== next) { return; }
-      await drawRoom(next.opening.w || 60, next.opening.d || 32, next.room,
-                     next.shape === 'corner');
+      const w = next.opening.w || 60;
+      const d = next.opening.d || 32;
+      // Parts before the room, because the pocket behind them has to stop at
+      // the top of the installation and only drawParts() knows where that is.
+      // Neither depends on the other's geometry, only on the opening.
+      const built = await drawParts();
       if (!alive || build !== next) { return; }
-      await drawParts();
+      await drawRoom(w, d, next.room, next.shape === 'corner', built.sunkTop);
       if (!alive) { return; }
+      // Last, because it moves the camera and the camera is clamped against
+      // the room's front edge, which drawRoom has just set.
+      frame(w, d, built.camTop);
       render();
     }).catch((err) => {
       // The chain has to end resolved. A rejected promise is inherited by
