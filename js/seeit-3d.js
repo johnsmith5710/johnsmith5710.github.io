@@ -82,7 +82,10 @@ export async function createViewer(mount, options = {}) {
   const renderer = new THREE.WebGLRenderer({
     antialias: true, alpha: false, powerPreference: 'high-performance'
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Cap harder on small screens: a 3x phone filling a half-height canvas is
+  // still > 2M pixels. 1.5 is enough for gelcoat specular without the cost.
+  const prCap = (mount.clientWidth || 640) < 700 ? 1.5 : 2;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, prCap));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -115,7 +118,11 @@ export async function createViewer(mount, options = {}) {
   const key = new THREE.DirectionalLight(0xffffff, 1.5);
   key.position.set(90, 150, 130);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  // 1024² is enough for a single product at this camera distance. Dropping
+  // to 512 saves fill-rate on integrated GPUs with almost no visible change.
+  const shadowRes = (typeof navigator !== 'undefined' &&
+    navigator.deviceMemory && navigator.deviceMemory <= 4) ? 512 : 1024;
+  key.shadow.mapSize.set(shadowRes, shadowRes);
   key.shadow.camera.near = 20;
   key.shadow.camera.far = 600;
   key.shadow.camera.left = -140;
@@ -286,13 +293,28 @@ export async function createViewer(mount, options = {}) {
   ro.observe(mount);
 
   // ── Draw only when something changed ───────────────────────────────
-  function render() { dirty = true; }
-
-  (function loop() {
+  // Demand-driven: no continuous rAF while idle. Saves battery on mobile
+  // and drops CPU to near zero when the user is reading the build list.
+  let raf = 0;
+  function tick() {
+    raf = 0;
+    if (!alive || document.hidden) { return; }
+    if (dirty) {
+      dirty = false;
+      renderer.render(scene, camera);
+    }
+  }
+  function render() {
+    dirty = true;
+    if (alive && !document.hidden && !raf) {
+      raf = requestAnimationFrame(tick);
+    }
+  }
+  document.addEventListener('visibilitychange', () => {
     if (!alive) { return; }
-    if (dirty) { dirty = false; renderer.render(scene, camera); }
-    requestAnimationFrame(loop);
-  })();
+    if (!document.hidden) { render(); }
+  });
+
 
   // ── Build the room ─────────────────────────────────────────────────
   // A named room is tried first and the plain alcove stands in whenever one
@@ -797,6 +819,7 @@ export async function createViewer(mount, options = {}) {
 
   function dispose() {
     alive = false;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
     ro.disconnect();
     clear(room);
     clear(parts);

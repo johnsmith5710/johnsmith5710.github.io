@@ -773,3 +773,24 @@
     transition: none;
   }
 }
+
+/* ── Screen-reader only (live region + focused headings) ───────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.seeit-panel h2:focus {
+  outline: none;
+}
+.seeit-panel h2:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 4px;
+}
