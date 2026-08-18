@@ -567,8 +567,12 @@ export async function createViewer(mount, options = {}) {
       room.add(upper);
 
       // The soffit closing the step, facing down onto the top of the piece.
+      // As wide as the pocket really is, side bays included, so that it meets
+      // the side reveals edge to edge instead of leaving a slot at each back
+      // corner or overlapping them and flickering along the join.
       const soffit = new THREE.Mesh(
-        new THREE.PlaneGeometry(backW, pocket), roomMat);
+        new THREE.PlaneGeometry(backW + 2 * (jamb > 0 ? pocket : 0), pocket),
+        roomMat);
       soffit.rotation.x = Math.PI / 2;
       soffit.position.set(backX, sunkTop, z0 - pocket / 2);
       soffit.receiveShadow = true;
@@ -582,17 +586,63 @@ export async function createViewer(mount, options = {}) {
 
     if (jamb > 0) {
       // The two walls of the niche, stopping at its mouth rather than running
-      // on. These are what the surround's end panels meet, held out by SKIN so
-      // the two faces are never at exactly the same depth.
-      const nicheD = d + pocket;
+      // on. These are what the surround's end panels meet.
+      //
+      // Pocketed outward exactly as the back wall is pocketed backward, and
+      // for the same reason: an end panel is nailed through the same flange
+      // and the wall finish is brought over it, so behind the finished face
+      // there is a stud bay for the flange to sit in. Above the panel the wall
+      // comes back to the opening line, which is the face the top flange beds
+      // against. Held off by SKIN there, so nothing is exactly coplanar with
+      // a generated panel's outer face.
+      //
+      // The void this leaves either side of the panel is closed on every side
+      // a camera can reach it from: the jamb return in front, the reveal above,
+      // the pocket wall outside, and the panel itself inside. It is a stud bay,
+      // and it reads as one.
       for (const inward of [1, -1]) {
-        const side = new THREE.Mesh(
-          new THREE.PlaneGeometry(nicheD, ROOM_H), roomMat);
-        side.rotation.y = inward * Math.PI / 2;
-        side.position.set(inward * (-(w / 2) - SKIN), ROOM_H / 2,
-                          zPocket + nicheD / 2);
-        side.receiveShadow = true;
-        room.add(side);
+        const xIn = inward * (-(w / 2) - SKIN);       // on the opening line
+        const xOut = inward * (-(w / 2) - pocket);    // out in the bay
+
+        if (pocket > 0) {
+          // Below the top of the installation: out in the bay, and running
+          // the full pocketed depth so it meets the pocketed back wall.
+          const lowerD = d + pocket;
+          const lower = new THREE.Mesh(
+            new THREE.PlaneGeometry(lowerD, sunkTop), roomMat);
+          lower.rotation.y = inward * Math.PI / 2;
+          lower.position.set(xOut, sunkTop / 2, zPocket + lowerD / 2);
+          lower.receiveShadow = true;
+          room.add(lower);
+
+          // Above it: on the opening line, and only as deep as the opening,
+          // because that is where the upper back wall stands.
+          const upper = new THREE.Mesh(
+            new THREE.PlaneGeometry(d, ROOM_H - sunkTop), roomMat);
+          upper.rotation.y = inward * Math.PI / 2;
+          upper.position.set(xIn, sunkTop + (ROOM_H - sunkTop) / 2, z0 + d / 2);
+          upper.receiveShadow = true;
+          room.add(upper);
+
+          // The reveal closing the step, facing down onto the panel's top
+          // edge. Only as deep as the opening: the back soffit already covers
+          // the pocketed band behind it, so the two tile the step between them
+          // rather than overlapping across it.
+          const revealW = Math.abs(xOut - xIn);
+          const reveal = new THREE.Mesh(
+            new THREE.PlaneGeometry(revealW, d), roomMat);
+          reveal.rotation.x = Math.PI / 2;
+          reveal.position.set((xIn + xOut) / 2, sunkTop, z0 + d / 2);
+          reveal.receiveShadow = true;
+          room.add(reveal);
+        } else {
+          const side = new THREE.Mesh(
+            new THREE.PlaneGeometry(d, ROOM_H), roomMat);
+          side.rotation.y = inward * Math.PI / 2;
+          side.position.set(xIn, ROOM_H / 2, z0 + d / 2);
+          side.receiveShadow = true;
+          room.add(side);
+        }
       }
 
       // The return: the face of the wall the niche is cut into, from the mouth
