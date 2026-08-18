@@ -48,6 +48,10 @@ const FLOOR_TILE_IN = 12;    // a 12 in. floor tile, the commonest size
 const BASE_H = 4;            // baseboard, 4 in. tall
 const BASE_T = 0.625;        // and 5/8 in. proud of the wall
 const CORNER_OPEN = 42;      // floor to the side of a corner bath
+// Wall either side of an alcove opening. This is what makes the niche read as
+// a recess cut into a wall rather than a corridor the width of the tub. 30 in.
+// is a plausible run of wall between a tub alcove and a door or a vanity.
+const JAMB_W = 30;
 
 // The ADA Select base is the only piece with no height in the workbook.
 // These are drawing defaults, not specifications.
@@ -468,67 +472,101 @@ export async function createViewer(mount, options = {}) {
     return holder;
   }
 
-  // A bathroom, closed on five sides, with the alcove built into it.
+  // A bathroom with the product set into it.
   //
-  // An alcove product goes wall to wall: a 60 in. tub in a 60 in. opening
-  // means the two side walls are the bathroom's own side walls, which is why
-  // they run forward from the back wall rather than stopping at the rim.
+  // An alcove is a recess. The niche is as wide as the opening and only as
+  // deep as the product; at its mouth the wall turns outward and carries on,
+  // and the bathroom in front is wider than the product is. Running the two
+  // side walls the whole depth of the room instead, which is what this did,
+  // gives two parallel walls the width of the tub receding 12 ft — the end of
+  // a hallway rather than something built into a wall.
   //
-  // A corner product does not. It stands in one corner of a wider room with
-  // two sides open, so the wall on its right is moved out and the floor runs
-  // past it. Drawing a corner bath between two close walls, which is what
-  // this did before, reads as an alcove and is the wrong product.
+  // A corner unit is not in an alcove and gets no return. Two of the room's
+  // own walls meet behind it and the floor opens out to one side.
   function plainRoom(w, d, corner) {
-    // The wall the product stands against, and the far wall.
-    const x0 = -w / 2;
-    const x1 = corner ? x0 + w + CORNER_OPEN : w / 2;
-    const z0 = -d;                       // the back wall, where the product is
-    const z1 = roomFront(w);             // the front of the room
-    frontZ = z1;                         // place() keeps the camera behind it
+    const jamb = corner ? 0 : JAMB_W;      // wall either side of the mouth
+    const x0 = corner ? -w / 2 : -w / 2 - jamb;
+    const x1 = corner ? -w / 2 + w + CORNER_OPEN : w / 2 + jamb;
+    const z0 = -d;                         // the back of the niche
+    const z1 = roomFront(w);               // the front of the room
+    frontZ = z1;                           // place() keeps the camera behind it
     const midX = (x0 + x1) / 2;
     const midZ = (z0 + z1) / 2;
     const fw = x1 - x0;
     const fd = z1 - z0;
 
+    // One slab each for floor and ceiling, over the whole plan. What falls
+    // behind a jamb is hidden by it, so there is nothing to cut out.
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(midX, 0, midZ);
     floor.receiveShadow = true;
     room.add(floor);
     // The tile is the only thing in the picture at a known size, so it is what
-    // the eye measures the product against. 12 in. squares, laid from the
-    // corner the product stands in.
+    // the eye measures the product against. 12 in. squares.
     floorTile(fw, fd);
 
-    // Closing the top is what stops the room reading as three flats standing
-    // in a void. It is a plane facing down, so from a high angle the camera
-    // passes through it and the view is unobstructed.
+    // Closing the top is what stops the room reading as flats in a void. It
+    // faces down, so from a high angle the camera passes through it and the
+    // view is unobstructed.
     const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd), roomMat);
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.set(midX, ROOM_H, midZ);
     room.add(ceiling);
 
-    // Exactly as wide as the room. The old back wall ran 100 in. past each
-    // side wall into nothing, which showed as soon as the view was turned.
-    const back = new THREE.Mesh(new THREE.PlaneGeometry(fw, ROOM_H), roomMat);
-    back.position.set(midX, ROOM_H / 2, z0);
+    // The back of the niche is only as wide as the niche. Past that it is
+    // behind a jamb and never seen.
+    const backW = corner ? fw : w;
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(backW, ROOM_H), roomMat);
+    back.position.set(corner ? midX : 0, ROOM_H / 2, z0);
     back.receiveShadow = true;
     room.add(back);
 
+    if (jamb > 0) {
+      // The two walls of the niche, stopping at its mouth rather than running
+      // on. These are what the surround's end panels meet.
+      for (const inward of [1, -1]) {
+        const side = new THREE.Mesh(new THREE.PlaneGeometry(d, ROOM_H), roomMat);
+        side.rotation.y = inward * Math.PI / 2;
+        side.position.set(inward * -w / 2, ROOM_H / 2, z0 + d / 2);
+        side.receiveShadow = true;
+        room.add(side);
+      }
+
+      // The return: the face of the wall the niche is cut into, from the mouth
+      // outward to the room. Facing the viewer, which is what reads as depth.
+      for (const inward of [1, -1]) {
+        const face = new THREE.Mesh(
+          new THREE.PlaneGeometry(jamb, ROOM_H), roomMat);
+        face.position.set(inward * -(w / 2 + jamb / 2), ROOM_H / 2, 0);
+        face.receiveShadow = true;
+        room.add(face);
+
+        const b = new THREE.Mesh(
+          new THREE.BoxGeometry(jamb, BASE_H, BASE_T), trimMat);
+        b.position.set(inward * -(w / 2 + jamb / 2), BASE_H / 2, BASE_T / 2);
+        b.receiveShadow = true;
+        room.add(b);
+      }
+    }
+
+    // The room's own side walls. In the alcove case they start at the mouth,
+    // because everything behind that line is inside the wall.
+    const sideZ0 = jamb > 0 ? 0 : z0;
+    const sideD = z1 - sideZ0;
     for (const [x, inward] of [[x0, 1], [x1, -1]]) {
-      const side = new THREE.Mesh(new THREE.PlaneGeometry(fd, ROOM_H), roomMat);
+      const side = new THREE.Mesh(new THREE.PlaneGeometry(sideD, ROOM_H), roomMat);
       side.rotation.y = inward * Math.PI / 2;
-      side.position.set(x, ROOM_H / 2, midZ);
+      side.position.set(x, ROOM_H / 2, sideZ0 + sideD / 2);
       side.receiveShadow = true;
       room.add(side);
 
-      // Baseboard, starting at the mouth of the alcove. Behind that line the
-      // product is against the wall and a skirting would be inside it.
-      const run = z1;
-      if (run > 1) {
+      // Baseboard, from the mouth forward. Behind that line the product is
+      // against the wall and a skirting would be inside it.
+      if (z1 > 1) {
         const b = new THREE.Mesh(
-          new THREE.BoxGeometry(BASE_T, BASE_H, run), trimMat);
-        b.position.set(x + inward * BASE_T / 2, BASE_H / 2, run / 2);
+          new THREE.BoxGeometry(BASE_T, BASE_H, z1), trimMat);
+        b.position.set(x + inward * BASE_T / 2, BASE_H / 2, z1 / 2);
         b.receiveShadow = true;
         room.add(b);
       }
