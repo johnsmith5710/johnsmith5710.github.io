@@ -13,6 +13,32 @@ mix releases: the core and the addons share private symbols.
 
 Fetch a file from `https://unpkg.com/three@0.185.1/<upstream path>`.
 
+## Gaussian splats were tried, and removed
+
+For the record, so it is not researched twice: **three.js has no Gaussian
+splat support of its own.** All 1,195 files in `three@0.185.1` were checked.
+The only match for splat, gaussian, gsplat, spz, ksplat, or sogs is
+`examples/jsm/tsl/display/GaussianBlurNode.js`, a post-processing blur, and
+the build exports 451 names with nothing splat-related.
+
+Splats therefore need a third-party renderer. Spark
+(`@sparkjsdev/spark` 2.1.0, MIT, peer range `three >=0.180.0`) was vendored
+and integrated, then removed on 2026-08-17. Two reasons it is worth knowing
+about before anyone tries again:
+
+- The bundle is 5.0 MB, six times three.js itself.
+- **A splat bakes colour and light in, so there is no material to replace.**
+  That runs against the point of this viewer, which applies the customer's
+  chosen finish to every mesh. A capture can only be multiplied toward another
+  finish, and Glacier Marble and Luna Grey are figured rather than flat, so a
+  multiply loses the veining. Full colour coverage needs a separate capture
+  per finish per part.
+
+The working implementation is kept in the backup tree, at
+`johnsmith5710-backups/js/seeit-3d.js.bak-20260817-142831` and
+`johnsmith5710-backups/tools/build_line_pages.py.bak-20260817-142831`, with
+its capture guide at `johnsmith5710-backups/splats/README.md.bak-20260817-142831`.
+
 ## The build comes in two halves
 
 This is the fact that matters most here. From release 0.171 the browser

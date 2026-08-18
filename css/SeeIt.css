@@ -8,25 +8,27 @@
    width and the tiles sit four or five across instead of two.
    ============================================================ */
 
-/* ── Head ───────────────────────────────────────────────── */
+/* ── Head ─────────────────────────────────────────────────────────────
+   Trimmed, because every line here is a line of picture given away. The
+   explanation of what the tool does belongs above the tool, but briefly. */
 .seeit-head {
-  padding: 2rem 0 1.5rem;
+  padding: 1.35rem 0 1.1rem;
   background: var(--primary);
   color: var(--surface);
   text-align: center;
 }
 
 .seeit-head h1 {
-  margin: 0.35rem 0 0.5rem;
+  margin: 0.25rem 0 0.35rem;
   color: var(--surface);
-  font-size: clamp(1.6rem, 3.6vw, 2.2rem);
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
 }
 
 .seeit-head p {
   max-width: 620px;
   margin: 0 auto;
-  font-size: 0.92rem;
-  line-height: 1.55;
+  font-size: 0.88rem;
+  line-height: 1.5;
   color: var(--surface-alt);
 }
 
@@ -34,32 +36,54 @@
   color: var(--surface-alt);
 }
 
-/* ── The two columns ────────────────────────────────────── */
-.seeit-block {
-  padding: 1.75rem 0 3rem;
+/* ── Viewer first ─────────────────────────────────────────────────────
+   The picture is the page. The wizard sits on it, the caption and the part
+   numbers sit under it, and nothing competes with the product for width.
+
+   Full width rather than inside .container, because the one thing a
+   configurator cannot have too much of is picture. */
+.seeit-app {
+  padding: 0 0 3rem;
   background: var(--light);
 }
 
-/* The room on the left, the options on the right. The source is in that
-   order too, so a keyboard runs through the page the way it looks. */
-.seeit-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.seeit-wizard,
 .seeit-stage {
+  position: relative;
   min-width: 0;
+  background: var(--alt);
 }
 
-/* ── The step rail ──────────────────────────────────────── */
+/* The dock floats over the picture on a wide screen. It is last in the
+   stage, after the canvas, so reading order and tab order match what the
+   eye does: look at the room, then answer the question about it. */
+.seeit-dock {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 2;
+  width: min(24rem, 40vw);
+  max-height: calc(100% - 2.5rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-dropdown);
+  overflow: hidden;
+}
+
+/* ── The step rail ────────────────────────────────────────────────────
+   A strip across the top of the dock rather than a column beside it. It
+   scrolls sideways if the six steps will not fit, so it never wraps into
+   two rows and shifts the panel down. */
 .seeit-rail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-bottom: 0.9rem;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid var(--surface-alt);
+  background: var(--light);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .seeit-rail button {
@@ -120,12 +144,13 @@
   color: var(--surface);
 }
 
-/* ── The open step ──────────────────────────────────────── */
+/* ── The open step ────────────────────────────────────────────────────
+   Inside the dock now, so the card treatment moved out to the dock and
+   this is just the scrolling body of it. */
 .seeit-panel {
-  padding: 1.25rem 1.35rem 1.1rem;
-  border-radius: var(--radius-md);
+  padding: 1.1rem 1.2rem 1rem;
+  min-height: 0;
   background: var(--surface);
-  box-shadow: var(--shadow-card);
 }
 
 .seeit-panel h2 {
@@ -283,6 +308,16 @@
 }
 
 /* A wall that is wider than the alcove and cuts down to it. */
+/* Free text for a fit that is not a dimension, so it sits under the size it
+   is accounting for and reads as prose rather than as a measurement. */
+.mc-note {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
 .mc-flag {
   display: inline-block;
   margin-top: 0.3rem;
@@ -414,21 +449,16 @@
   cursor: not-allowed;
 }
 
-/* ── The drawing, and the build under it ────────────────── */
-.seeit-sticky {
-  position: sticky;
-  top: 1.25rem;
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-card);
-  overflow: hidden;
-}
-
-/* The room. The canvas sizes itself, so the box only has to hold a shape
-   before it arrives and stop the page jumping when it does. */
+/* ── The drawing ──────────────────────────────────────────────────────
+   The canvas sizes itself, so the box only has to hold a shape before it
+   arrives and stop the page jumping when it does. Wider than it was, and
+   capped by viewport height so the whole room is on screen at once without
+   scrolling to see the bottom of it. */
 .seeit-view {
   position: relative;
-  aspect-ratio: 25 / 18;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 12rem);
+  min-height: 24rem;
   background: var(--alt);
   overflow: hidden;
 }
@@ -474,33 +504,140 @@
   visibility: hidden;
 }
 
+/* ── Under the picture ────────────────────────────────────────────────
+   What is in the room, in a sentence, and the part numbers behind it. */
+.seeit-summary {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
 .seeit-caption {
   margin: 0;
-  padding: 0.8rem 1.1rem;
-  border-top: 1px solid var(--surface-alt);
-  font-size: 0.86rem;
+  padding: 0.9rem 0.2rem;
+  font-size: 0.95rem;
   line-height: 1.5;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--dark);
   text-align: center;
 }
 
-.seeit-build {
-  padding: 0.9rem 1.1rem 1rem;
+/* ── The room picker ──────────────────────────────────────────────────
+   Scenery, not a product, so it is not a wizard step. It sits on the
+   picture, bottom left, out of the dock's way. */
+.seeit-rooms {
+  position: absolute;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-md);
+  background: var(--overlay-scrim);
+}
+
+/* display above is an author rule, so on its own it beats the browser's
+   [hidden] { display: none } and roomPicker() could not hide the row. Same
+   companion rule as .cut-flag[hidden] in Lines.css. */
+.seeit-rooms[hidden] {
+  display: none;
+}
+
+/* On the scrim now, so the muted grey it used to be would not read. */
+.seeit-rooms-label {
+  margin-right: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--visit-light);
+}
+
+.room-chip {
+  padding: 0.32rem 0.7rem;
+  border: 1px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.room-chip:hover {
+  border-color: var(--primary-muted);
   background: var(--alt);
 }
 
-.seeit-build h2 {
-  margin: 0 0 0.6rem;
+.room-chip.is-active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--visit-light);
+}
+
+/* A details element, so a phone can fold the part numbers away and no
+   script is needed to do it. Open by default: the numbers are the thing a
+   visitor takes to a dealer. */
+.seeit-build {
+  margin: 0 0 1rem;
+  border: 1px solid var(--surface-alt);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.seeit-build > summary {
+  padding: 0.7rem 1.1rem;
+  background: var(--alt);
+  cursor: pointer;
+  list-style: none;
+}
+
+.seeit-build > summary::-webkit-details-marker {
+  display: none;
+}
+
+.build-title {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
-  text-align: left;
+}
+
+/* The disclosure arrow, drawn rather than relying on the default marker,
+   which cannot be positioned. Turns when the panel opens. */
+.seeit-build > summary::after {
+  content: "";
+  float: right;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-top: 0.25rem;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  transition: transform var(--transition-fast);
+}
+
+.seeit-build[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.seeit-build > summary:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: -3px;
 }
 
 .build-list {
   margin: 0;
+  padding: 0.9rem 1.1rem;
   display: grid;
   grid-template-columns: 6.5rem 1fr;
   gap: 0.3rem 0.6rem;
@@ -536,21 +673,28 @@
   color: var(--text-muted);
 }
 
+/* Side by side once there is width for it: the small print reads as small
+   print and the call button stops being a full-width slab. */
 .seeit-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
   padding: 0.8rem 1.1rem;
   border-top: 1px solid var(--surface-alt);
 }
 
 .seeit-foot p {
-  margin: 0 0 0.7rem;
+  flex: 1 1 20rem;
+  margin: 0;
   font-size: 0.75rem;
   line-height: 1.5;
   color: var(--text-muted);
 }
 
 .seeit-foot .btn {
-  width: 100%;
-  padding: 0.45rem 1rem;
+  flex: 0 0 auto;
+  padding: 0.45rem 1.1rem;
   font-size: 0.82rem;
 }
 
@@ -577,24 +721,47 @@
   text-align: center;
 }
 
-/* ── Narrow screens ─────────────────────────────────────── */
+/* ── Narrow screens ───────────────────────────────────────────────────
+   The dock stops floating and becomes a sheet under the picture. It is
+   already last in the stage, so taking the positioning off is the whole
+   change: no reordering, and the tab order does not move. */
 @media (max-width: 980px) {
-  .seeit-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* The room already comes first in the source, so one column puts it at
-     the top with no reordering. */
-  .seeit-sticky {
+  .seeit-dock {
     position: static;
+    width: auto;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: var(--shadow-card);
   }
 
   .seeit-view {
     aspect-ratio: 4 / 3;
+    max-height: 60vh;
+    min-height: 0;
+  }
+
+  /* Back on the picture would cover a third of it at this size. */
+  .seeit-rooms {
+    position: static;
+    justify-content: center;
+    border-radius: 0;
+    background: var(--alt);
+  }
+
+  .seeit-rooms-label {
+    color: var(--text-muted);
   }
 
   .seeit-cards {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+/* The dock is a scrolling sheet on a short screen, so the panel keeps its
+   own scrollbar rather than pushing the page down. */
+@media (min-width: 981px) {
+  .seeit-panel {
+    overflow-y: auto;
   }
 }
 

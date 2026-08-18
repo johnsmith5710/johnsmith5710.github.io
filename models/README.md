@@ -35,6 +35,22 @@ that, say so and the override can be made to skip named materials.
 - **Any unit.** Millimetres, centimetres, inches, feet, and metres all
   work. The loader scales by the width and snaps to the exact unit factor,
   so a Blender file left in metres is fine.
+- **Do not unwrap. The viewer writes its own UVs.** A colour tile is a
+  photograph of a finish at a real size, so it has to land at that size on
+  the product. `boxUV()` in `js/seeit-3d.js` projects every vertex onto the
+  plane its normal faces most and measures the result in inches, so one tile
+  covers `TILE_IN` inches on a generated shape and on an export alike. Any
+  UV map in the file is replaced. Time spent unwrapping is wasted, in the
+  same way that time spent on a gelcoat shader is.
+- **Export normals.** `boxUV()` picks the projection plane from the vertex
+  normal. The glTF exporter writes normals by default; leave that on. A file
+  with none still loads, and the viewer computes flat normals, but the
+  finish will run the wrong way across a curved face.
+- **Apply the transforms.** In Blender, select all and Ctrl+A → All
+  Transforms, so every object arrives with no rotation and no scale of its
+  own. `boxUV()` reads the normals as the file states them. A node left
+  rotated draws correctly but takes the finish at an angle. Both current
+  exports are clean on this point.
 - **Placement is worked out for you.** The model is centred across the
   opening, stood on the floor, and pushed back until its rear face meets
   the back wall. Anything that returns past the mouth of the alcove — the

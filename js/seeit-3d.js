@@ -17,8 +17,13 @@
          opening: { w, d },
          fixture: { part, box:[w,d,h], category, sits, color } | null,
          wall:    { part, box:[w,d,h], color } | null,
-         bars:    [ 'back' | 'side', ... ]
+         bars:    [ 'back' | 'side', ... ],
+         room:    '<room id>' | null
        }
+
+   room names one of the rooms declared in options.rooms. Anything else,
+   including null, draws the plain alcove the viewer builds itself. A room is
+   scenery: it is never part of the build list and never priced.
 
    Geometry is generated from those numbers. When a Blender export exists
    at models/<part>.glb it is loaded and used instead, so the two can live
@@ -33,6 +38,17 @@ const WALL_T = 3;            // the wall of a tub or a pan
 const APRON_R = 1.5;         // the radius on a rim
 const BAR_R = 0.7;           // a grab bar
 
+// How much product one colour tile covers. Every textured surface carries
+// UVs measured in inches, so this one number sets the density everywhere.
+// See boxUV().
+const TILE_IN = 26;
+
+// The room the products stand in.
+const FLOOR_TILE_IN = 12;    // a 12 in. floor tile, the commonest size
+const BASE_H = 4;            // baseboard, 4 in. tall
+const BASE_T = 0.625;        // and 5/8 in. proud of the wall
+const CORNER_OPEN = 42;      // floor to the side of a corner bath
+
 // The ADA Select base is the only piece with no height in the workbook.
 // These are drawing defaults, not specifications.
 const NOMINAL_H = { low: 5, tall: 19 };
@@ -41,6 +57,8 @@ export async function createViewer(mount, options = {}) {
   const opts = Object.assign({
     modelPath: '../models/',     // where a Blender export lives
     models: [],                  // part numbers that actually have one
+    roomPath: '../rooms/',       // where a room export lives
+    rooms: [],                   // [{ id, file, unit }], see roomList below
     textures: {},                // color name -> image url
     onReady: null
   }, options);
@@ -48,6 +66,18 @@ export async function createViewer(mount, options = {}) {
   // Only ask for a file that is known to be there. Guessing would put a
   // failed request on the wire for every part that has not been exported.
   const exported = new Set(opts.models);
+
+  // The rooms on offer, by id. A room needs its unit declared, unlike a
+  // part: a part's unit is worked out from the width the opening gives it,
+  // and a room has no such known measurement to be read against.
+  const roomList = new Map();
+  for (const r of opts.rooms) {
+    if (!r || !r.id) { continue; }
+    roomList.set(r.id, {
+      file: r.file || (r.id + '.glb'),
+      unit: r.unit || 1
+    });
+  }
 
   const renderer = new THREE.WebGLRenderer({
     antialias: true, alpha: false, powerPreference: 'high-performance'
@@ -71,8 +101,14 @@ export async function createViewer(mount, options = {}) {
   // far has to clear the studio box. The default is 100 and the box is 450
   // out, so leaving it would clip every panel out of the reflection.
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(studio(), 0.04, 1, 2000).texture;
+  const box = studio();
+  scene.environment = pmrem.fromScene(box, 0.04, 1, 2000).texture;
   pmrem.dispose();
+  // The bake uploads the box to the GPU, and pmrem.dispose() does not reach
+  // it. Held in a local so it can be taken apart afterwards; dropped straight
+  // into fromScene() it would be unreachable and its buffers would stay for
+  // the life of the context.
+  clear(box);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0xb8c6d4, 0.55));
 
@@ -105,7 +141,9 @@ export async function createViewer(mount, options = {}) {
       const t = loader.load(opts.textures[name], () => render());
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.colorSpace = THREE.SRGBColorSpace;
-      t.repeat.set(1 / 26, 1 / 26);      // one tile across ~26 in.
+      // UVs are in inches on every painted surface, so this is literally
+      // one tile across TILE_IN inches.
+      t.repeat.set(1 / TILE_IN, 1 / TILE_IN);
       t.anisotropy = renderer.capabilities.getMaxAnisotropy();
       tiles.set(name, t);
     }
@@ -157,12 +195,24 @@ export async function createViewer(mount, options = {}) {
   const LIMIT = { theta: 0.62, phiLo: 0.62, phiHi: 1.52, rLo: 0.55, rHi: 1.7 };
   let rBase = 150;
 
+  // How far forward the room reaches. The camera has to stay behind it: the
+  // walls face inward, so from outside they disappear and the room turns
+  // inside out. Set when a room is drawn; until then there is nothing to hit.
+  let frontZ = Infinity;
+
   function place() {
-    const { r, theta, phi, target } = orbit;
+    const { theta, phi, target } = orbit;
+    const out = Math.sin(phi) * Math.cos(theta);   // how much of r goes into +z
+    // Pull in far enough to stay inside, rather than making the room long
+    // enough to never be left. A bathroom is not 20 ft deep.
+    let r = orbit.r;
+    if (out > 0.05 && frontZ !== Infinity) {
+      r = Math.min(r, Math.max(24, (frontZ - 8 - target.z) / out));
+    }
     camera.position.set(
       target.x + r * Math.sin(phi) * Math.sin(theta),
       target.y + r * Math.cos(phi),
-      target.z + r * Math.sin(phi) * Math.cos(theta)
+      target.z + r * out
     );
     camera.lookAt(target);
   }
@@ -245,27 +295,177 @@ export async function createViewer(mount, options = {}) {
   })();
 
   // ── Build the room ─────────────────────────────────────────────────
-  function drawRoom(w, d) {
+  // A named room is tried first and the plain alcove stands in whenever one
+  // is not asked for, is not on offer, or does not load. The room is only
+  // ever scenery, so nothing about the products depends on which one it is.
+  async function drawRoom(w, d, want, corner) {
     clear(room);
+    const made = want ? await roomModel(want, d) : null;
+    if (made) {
+      room.add(made);
+      return;
+    }
+    plainRoom(w, d, corner);
+  }
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(w + 220, d + 220), floorMat);
+  const roomCache = new Map();
+  let roomsOff = false;
+
+  async function roomModel(id, d) {
+    const spec = roomList.get(id);
+    if (!spec || roomsOff) { return null; }
+    const url = opts.roomPath + spec.file;
+    if (roomCache.get(url) === false) { return null; }
+    try {
+      if (!GLTF) {
+        ({ GLTFLoader: GLTF } = await import('three/addons/loaders/GLTFLoader.js'));
+      }
+      if (!roomCache.has(url)) {
+        const loaded = await new GLTF().loadAsync(url);
+        // A room keeps the finish it was modelled with. That is the one place
+        // this file trusts a material out of a file, and it is the reason a
+        // room is worth having: the tile, the paint, and the window are the
+        // point of it. own() also holds clear() off, since the room group is
+        // emptied and refilled on every answer.
+        loaded.scene.traverse((n) => {
+          if (n.geometry) { own(n.geometry); }
+          if (n.material) {
+            (Array.isArray(n.material) ? n.material : [n.material]).forEach(own);
+          }
+          if (n.isMesh) { n.receiveShadow = true; n.castShadow = false; }
+        });
+        roomCache.set(url, loaded);
+      }
+      return placeRoom(roomCache.get(url).scene, spec, d);
+    } catch (err) {
+      // A missing loader stops every room. A bad file stops only that one.
+      if (!GLTF) { roomsOff = true; } else { roomCache.set(url, false); }
+      return null;
+    }
+  }
+
+  // The same placement rule a part gets: centred across the opening, stood on
+  // the floor, and pushed back until its rear face meets the alcove's back
+  // wall. A room is not scaled to the opening, though. A part is as wide as
+  // the alcove by definition; a room is not sized by the tub standing in it.
+  function placeRoom(scene, spec, d) {
+    const holder = new THREE.Group();
+    holder.add(scene);
+    scene.scale.setScalar(spec.unit);
+    scene.position.set(0, 0, 0);
+    scene.updateMatrixWorld(true);
+
+    const box = new THREE.Box3().setFromObject(scene);
+    const mid = box.getCenter(new THREE.Vector3());
+    scene.position.set(-mid.x, -box.min.y, -d - box.min.z);
+    // Where this room's front edge ends up, so place() can keep the camera
+    // inside it the same way it does for the plain alcove.
+    frontZ = -d + (box.max.z - box.min.z);
+    return holder;
+  }
+
+  // A bathroom, closed on five sides, with the alcove built into it.
+  //
+  // An alcove product goes wall to wall: a 60 in. tub in a 60 in. opening
+  // means the two side walls are the bathroom's own side walls, which is why
+  // they run forward from the back wall rather than stopping at the rim.
+  //
+  // A corner product does not. It stands in one corner of a wider room with
+  // two sides open, so the wall on its right is moved out and the floor runs
+  // past it. Drawing a corner bath between two close walls, which is what
+  // this did before, reads as an alcove and is the wrong product.
+  function plainRoom(w, d, corner) {
+    // The wall the product stands against, and the far wall.
+    const x0 = -w / 2;
+    const x1 = corner ? x0 + w + CORNER_OPEN : w / 2;
+    const z0 = -d;                       // the back wall, where the product is
+    const z1 = roomFront(w);             // the front of the room
+    frontZ = z1;                         // place() keeps the camera behind it
+    const midX = (x0 + x1) / 2;
+    const midZ = (z0 + z1) / 2;
+    const fw = x1 - x0;
+    const fd = z1 - z0;
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd), floorMat);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.z = (d + 220) / 2 - d - 4;
+    floor.position.set(midX, 0, midZ);
     floor.receiveShadow = true;
     room.add(floor);
+    // The tile is the only thing in the picture at a known size, so it is what
+    // the eye measures the product against. 12 in. squares, laid from the
+    // corner the product stands in.
+    floorTile(fw, fd);
 
-    const back = new THREE.Mesh(new THREE.PlaneGeometry(w + 200, ROOM_H), roomMat);
-    back.position.set(0, ROOM_H / 2, -d);
+    // Closing the top is what stops the room reading as three flats standing
+    // in a void. It is a plane facing down, so from a high angle the camera
+    // passes through it and the view is unobstructed.
+    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd), roomMat);
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.set(midX, ROOM_H, midZ);
+    room.add(ceiling);
+
+    // Exactly as wide as the room. The old back wall ran 100 in. past each
+    // side wall into nothing, which showed as soon as the view was turned.
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(fw, ROOM_H), roomMat);
+    back.position.set(midX, ROOM_H / 2, z0);
     back.receiveShadow = true;
     room.add(back);
 
-    for (const s of [-1, 1]) {
-      const side = new THREE.Mesh(new THREE.PlaneGeometry(d + 200, ROOM_H), roomMat);
-      side.rotation.y = s * Math.PI / 2;
-      side.position.set(s * (w / 2), ROOM_H / 2, -d + (d + 200) / 2);
+    for (const [x, inward] of [[x0, 1], [x1, -1]]) {
+      const side = new THREE.Mesh(new THREE.PlaneGeometry(fd, ROOM_H), roomMat);
+      side.rotation.y = inward * Math.PI / 2;
+      side.position.set(x, ROOM_H / 2, midZ);
       side.receiveShadow = true;
       room.add(side);
+
+      // Baseboard, starting at the mouth of the alcove. Behind that line the
+      // product is against the wall and a skirting would be inside it.
+      const run = z1;
+      if (run > 1) {
+        const b = new THREE.Mesh(
+          new THREE.BoxGeometry(BASE_T, BASE_H, run), trimMat);
+        b.position.set(x + inward * BASE_T / 2, BASE_H / 2, run / 2);
+        b.receiveShadow = true;
+        room.add(b);
+      }
     }
+  }
+
+  // How far the room runs forward of the alcove. It used to be d + 220, a
+  // 20 ft corridor, chosen so the camera could never get out of it; place()
+  // holds the camera in now, so this can be a floor instead of a runway.
+  //
+  // The floor is what is left. It has to be deep enough for the camera to
+  // stand back and take in the tallest build, which is a low base under a
+  // 78 in. surround, near enough 84 in. At a 38 degree lens that wants about
+  // 122 in. of standoff, and the camera looks in at a slight angle, so 112 in.
+  // of floor in front of the rim covers it with a little to spare.
+  function roomFront(w) {
+    return Math.max(112, w * 1.7);
+  }
+
+  let tileTex = null;
+
+  function floorTile(fw, fd) {
+    if (!tileTex) {
+      // Drawn here rather than shipped, so it costs no request and stays
+      // exactly one tile whatever the room measures.
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const g = c.getContext('2d');
+      g.fillStyle = '#ffffff';
+      g.fillRect(0, 0, 128, 128);
+      g.strokeStyle = 'rgba(90, 105, 120, 0.30)';
+      g.lineWidth = 3;
+      g.strokeRect(1.5, 1.5, 125, 125);
+      tileTex = new THREE.CanvasTexture(c);
+      tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping;
+      tileTex.colorSpace = THREE.SRGBColorSpace;
+      tileTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      floorMat.map = tileTex;
+      floorMat.needsUpdate = true;
+    }
+    tileTex.repeat.set(fw / FLOOR_TILE_IN, fd / FLOOR_TILE_IN);
   }
 
   // ── Build the products ─────────────────────────────────────────────
@@ -300,10 +500,13 @@ export async function createViewer(mount, options = {}) {
       // A seated base closes one end off at the rim.
       if (f.category === 'Seated Base') {
         const sw = Math.min(17, w * 0.32);
-        const seat = new THREE.Mesh(
-          rounded(sw, d - 2 * WALL_T, rim - WALL_T, 1), mat);
+        const seatGeo = rounded(sw, d - 2 * WALL_T, rim - WALL_T, 1);
+        boxUV(seatGeo);                      // built here, so painted here
+        const seat = new THREE.Mesh(seatGeo, mat);
         seat.position.set(-w / 2 + WALL_T + sw / 2, (rim - WALL_T) / 2, -d / 2);
-        seat.castShadow = true;
+        // Both, the way paint() sets them. This mesh is built here rather than
+        // inside the group, so it has to say so itself.
+        seat.castShadow = seat.receiveShadow = true;
         parts.add(seat);
       }
     }
@@ -380,7 +583,10 @@ export async function createViewer(mount, options = {}) {
         });
         gltfCache.set(url, loaded);
       }
-      return fit(gltfCache.get(url).scene.clone(true), w, d);
+      // box[0] is the part's own width from the workbook. It is what the unit
+      // has to be read against, not the opening: see fit().
+      return fit(gltfCache.get(url).scene.clone(true), w, d,
+                 (spec.box && spec.box[0]) || w);
     } catch (err) {
       // A missing loader stops every part. A bad file stops only that one.
       if (!GLTF) { gltfOff = true; } else { gltfCache.set(url, false); }
@@ -391,22 +597,42 @@ export async function createViewer(mount, options = {}) {
   // Sit an export in the opening. The export is Y up, the way glTF says:
   // X is the width, Y the height, Z the depth. See models/README.md.
   //
-  // Scale comes from the width alone, because the width is what has to
-  // meet the two side walls. Depth is left as modelled, since a surround
-  // legitimately returns past the mouth of the alcove.
+  // The one thing being worked out here is the file's unit, and it is read
+  // against the part's own width, not the opening's. Those are the same
+  // number for a part built for that opening, and they are not for a panel
+  // that cuts down to it: a 60 in. Glue-Up panel in a 32 in. alcove is still
+  // a 60 in. panel until somebody cuts it. Reading the unit off the opening
+  // would have squashed it to 53% on every axis, so a 72 in. panel would have
+  // been drawn 38 in. tall.
   //
-  // Height is read off the model rather than the workbook. A nominal size
-  // leaves out the flange, so a 3-1/2 in. base measures nearer 5, and the
-  // surround above it has to stack on what is really there.
-  function fit(root, w, d) {
+  // Nothing is ever stretched to fit. Width, depth, and height all come out
+  // as modelled, in inches. A surround legitimately returns past the mouth of
+  // the alcove, and a cut-to-fit panel legitimately overhangs it; the wizard
+  // flags that separately.
+  //
+  // Height is therefore read off the model rather than the workbook. A
+  // nominal size leaves out the flange, so a 3-1/2 in. base measures nearer
+  // 5, and the surround above it has to stack on what is really there.
+  function fit(root, w, d, trueWidth) {
     const holder = new THREE.Group();
     holder.add(root);
     root.updateMatrixWorld(true);
 
     const span = new THREE.Box3().setFromObject(root)
       .getSize(new THREE.Vector3());
-    if (span.x > 1e-9) { root.scale.setScalar(snapUnit(w / span.x)); }
+    const unit = span.x > 1e-9 ? snapUnit((trueWidth || w) / span.x) : 1;
+    if (span.x > 1e-9) { root.scale.setScalar(unit); }
     root.updateMatrixWorld(true);
+
+    // What one model unit is worth in inches. paint() needs it, because the
+    // export is measured in its own units and a UV has to come out in
+    // inches like every other surface. Carried on the holder rather than
+    // worked out again, since snapUnit() has already decided.
+    //
+    // This is the same number every time the part is drawn, whatever opening
+    // it is drawn in, which is what makes boxUV()'s write-once guard safe on
+    // geometry the cache shares between clones.
+    holder.userData.uvScale = unit;
 
     // X centred in the opening, Y on the floor, and Z pushed back until the
     // rear face meets the back wall. Back-aligned rather than centred, so
@@ -442,14 +668,18 @@ export async function createViewer(mount, options = {}) {
     shape.holes.push(roundedShape(w - 2 * WALL_T, d - 2 * WALL_T,
                                   Math.max(0.5, r - WALL_T)));
     const lip = Math.max(0.6, h * 0.08);
-    const rim = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, {
+    const rimGeo = new THREE.ExtrudeGeometry(shape, {
       depth: lip, bevelEnabled: true,
       bevelSize: APRON_R * 0.4, bevelThickness: APRON_R * 0.4,
       bevelSegments: 2, curveSegments: 10
-    }), null);
-    // Turning the mesh sends its local +Z to world +Y, so the ring grows
-    // upward from wherever it is put. Its top has to land on h, not above.
-    rim.rotation.x = -Math.PI / 2;
+    });
+    // Extrude runs along +Z, so the ring is turned upright. The turn is put
+    // on the geometry, not on the mesh: it is the same shape either way, but
+    // boxUV() reads the normals off the geometry and has to see which way
+    // the surface really faces. The ring then grows upward from wherever it
+    // is put, and its top has to land on h, not above.
+    rimGeo.rotateX(-Math.PI / 2);
+    const rim = new THREE.Mesh(rimGeo, null);
     rim.position.y = h - lip;
     g.add(rim);
 
@@ -457,9 +687,10 @@ export async function createViewer(mount, options = {}) {
     body.position.y = (h - 0.6) / 2;
     g.add(body);
 
-    const basin = new THREE.Mesh(
-      new THREE.PlaneGeometry(w - 2 * WALL_T, d - 2 * WALL_T), null);
-    basin.rotation.x = -Math.PI / 2;
+    // Laid flat on the geometry, for the same reason as the rim.
+    const basinGeo = new THREE.PlaneGeometry(w - 2 * WALL_T, d - 2 * WALL_T);
+    basinGeo.rotateX(-Math.PI / 2);
+    const basin = new THREE.Mesh(basinGeo, null);
     basin.position.y = h * 0.14 + 0.2;
     g.add(basin);
 
@@ -509,9 +740,17 @@ export async function createViewer(mount, options = {}) {
   // The finish comes from the workbook, never from the model file, so it is
   // applied to a Blender export as well as to a generated shape. Export
   // geometry; the color a part is made in is decided here.
+  //
+  // The UVs are settled here too, for the same reason. A tile is a
+  // photograph of a finish at a real size, so it has to land at that size on
+  // whatever it is painted on. Three sources disagreed about what a UV
+  // means: an extruded shape gave inches, a box gave 0 to 1, and a Blender
+  // export gave a few thousand. boxUV() replaces all three.
   function paint(group, mat) {
+    const scale = group.userData.uvScale || 1;
     group.traverse((o) => {
       if (!o.isMesh) { return; }
+      if (o.geometry) { boxUV(o.geometry, scale); }
       o.material = mat;
       o.castShadow = true;
       o.receiveShadow = true;
@@ -535,9 +774,16 @@ export async function createViewer(mount, options = {}) {
     // Loading a model is asynchronous, so updates are queued. Without this
     // a fast run through the wizard can land parts out of order.
     pending = pending.then(async () => {
+      // Checked again after every await. Loading a room or a heavy export
+      // takes long enough for dispose() to land in the middle of it, and the
+      // rest of this would then add parts to a torn-down scene and reach for
+      // a renderer that has given its context back.
       if (!alive || build !== next) { return; }
-      drawRoom(next.opening.w || 60, next.opening.d || 32);
+      await drawRoom(next.opening.w || 60, next.opening.d || 32, next.room,
+                     next.shape === 'corner');
+      if (!alive || build !== next) { return; }
       await drawParts();
+      if (!alive) { return; }
       render();
     }).catch((err) => {
       // The chain has to end resolved. A rejected promise is inherited by
@@ -556,18 +802,23 @@ export async function createViewer(mount, options = {}) {
     clear(parts);
     // clear() steps over everything own() marked, so the viewer releases its
     // own things here. This is the only place they go.
-    [roomMat, floorMat, trimMat].forEach((m) => m.dispose());
-    gltfCache.forEach((loaded) => {
-      if (!loaded) { return; }              // false marks a file that failed
-      loaded.scene.traverse((n) => {
-        if (n.geometry) { n.geometry.dispose(); }
-        if (n.material) {
-          (Array.isArray(n.material) ? n.material : [n.material])
-            .forEach((m) => m.dispose());
-        }
+    // dropMaterial rather than dispose, because the floor now carries the
+    // tile canvas and a material never releases its own images.
+    [roomMat, floorMat, trimMat].forEach(dropMaterial);
+    tileTex = null;
+    for (const cache of [gltfCache, roomCache]) {
+      cache.forEach((loaded) => {
+        if (!loaded) { return; }            // false marks a file that failed
+        loaded.scene.traverse((n) => {
+          if (n.geometry) { n.geometry.dispose(); }
+          if (n.material) {
+            (Array.isArray(n.material) ? n.material : [n.material])
+              .forEach(dropMaterial);
+          }
+        });
       });
-    });
-    gltfCache.clear();
+      cache.clear();
+    }
     tiles.forEach((t) => t.dispose());
     if (scene.environment) { scene.environment.dispose(); }
     renderer.dispose();
@@ -595,6 +846,71 @@ function own(res) {
 
 function kept(res) {
   return !!res.userData && res.userData.keep === true;
+}
+
+// Disposing a material does not release the images hanging off it, and a room
+// is the one thing here that arrives with its own. Only the caches call this,
+// at the end; a build's own material has no map but the shared colour tile,
+// which outlives it.
+const MAPS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap',
+              'emissiveMap', 'alphaMap', 'bumpMap', 'displacementMap',
+              'lightMap', 'clearcoatMap', 'specularMap'];
+
+function dropMaterial(mat) {
+  if (!mat) { return; }
+  for (const key of MAPS) {
+    if (mat[key] && mat[key].dispose) { mat[key].dispose(); }
+  }
+  mat.dispose();
+}
+
+// Give a geometry UVs measured in inches, by projecting every vertex onto
+// whichever of the three planes its normal faces most. A tile then covers
+// TILE_IN inches of product wherever it lands.
+//
+// This replaces whatever UVs the geometry arrived with, and that is the
+// point. Three sources disagreed: ExtrudeGeometry writes the vertex
+// coordinates, so it was already inches; BoxGeometry and PlaneGeometry write
+// 0 to 1 per face, which made a tile 26 times too big; and the Blender
+// exports carry a projection from the CAD import running to a few thousand,
+// which made a tile about fifty times too small. One rule now covers all
+// three, so a generated shape and an export show the same finish.
+//
+// scale converts a model unit to an inch. Generated shapes are drawn in
+// inches and pass 1. An export passes what snapUnit() worked out.
+//
+// The plane is chosen per vertex, not per face, because per face needs one
+// vertex per triangle and these exports are heavy enough already. Where a
+// curved surface turns a corner the two projections meet in a seam. A
+// gelcoat speckle hides it. A directional pattern would not, and would need
+// the per-face form.
+function boxUV(geometry, scale = 1) {
+  if (geometry.userData.uvInches) { return; }
+  const pos = geometry.attributes.position;
+  if (!pos) { return; }
+  if (!geometry.attributes.normal) { geometry.computeVertexNormals(); }
+  const nor = geometry.attributes.normal;
+
+  const uv = new Float32Array(pos.count * 2);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i) * scale;
+    const y = pos.getY(i) * scale;
+    const z = pos.getZ(i) * scale;
+    const nx = Math.abs(nor.getX(i));
+    const ny = Math.abs(nor.getY(i));
+    const nz = Math.abs(nor.getZ(i));
+    let u, v;
+    if (nx >= ny && nx >= nz) { u = z; v = y; }        // a left or right face
+    else if (ny >= nz) { u = x; v = z; }               // a floor or a rim
+    else { u = x; v = y; }                             // a back or a front
+    uv[i * 2] = u;
+    uv[i * 2 + 1] = v;
+  }
+
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  // Written once. The geometry of an export is shared with the cache, so a
+  // second pass would be wasted work on a heavy mesh.
+  geometry.userData.uvInches = true;
 }
 
 // Take a group apart and release what that build alone was using. paint()
