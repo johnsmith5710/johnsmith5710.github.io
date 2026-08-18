@@ -448,6 +448,8 @@ export async function createViewer(mount, options = {}) {
     } catch (err) {
       // A missing loader stops every room. A bad file stops only that one.
       if (!GLTF) { roomsOff = true; } else { roomCache.set(url, false); }
+      console.warn(`seeit-3d: ${url} did not load, so the plain alcove is `
+                   + `drawn instead.`, err);
       return null;
     }
   }
@@ -732,6 +734,11 @@ export async function createViewer(mount, options = {}) {
     } catch (err) {
       // A missing loader stops every part. A bad file stops only that one.
       if (!GLTF) { gltfOff = true; } else { gltfCache.set(url, false); }
+      // Said out loud. Falling back silently is right for the customer, who
+      // still gets a picture and a part number, and wrong for whoever just
+      // replaced the file: the page looks like it ignored them.
+      console.warn(`seeit-3d: ${url} did not load, so ${key} is drawn from its `
+                   + `workbook numbers instead.`, err);
       return fallback();
     }
   }
@@ -766,15 +773,15 @@ export async function createViewer(mount, options = {}) {
     if (span.x > 1e-9) { root.scale.setScalar(unit); }
     root.updateMatrixWorld(true);
 
-    // What one model unit is worth in inches. paint() needs it, because the
-    // export is measured in its own units and a UV has to come out in
-    // inches like every other surface. Carried on the holder rather than
-    // worked out again, since snapUnit() has already decided.
+    // The unit is not carried onward. paint() needs the local-to-world scale
+    // of each mesh, which is this unit combined with whatever the export's own
+    // nodes carry, so it reads that off the mesh instead. Deriving it from the
+    // root here as well would be a second source of truth for the same number,
+    // and it was the wrong one.
     //
-    // This is the same number every time the part is drawn, whatever opening
-    // it is drawn in, which is what makes boxUV()'s write-once guard safe on
-    // geometry the cache shares between clones.
-    holder.userData.uvScale = unit;
+    // The unit is still the same every time the part is drawn, whatever
+    // opening it is drawn in, which is what makes boxUV()'s write-once guard
+    // safe on geometry the cache shares between clones.
 
     // X centred in the opening, Y on the floor, and Z pushed back until the
     // rear face meets the back wall. Back-aligned rather than centred, so
@@ -888,11 +895,26 @@ export async function createViewer(mount, options = {}) {
   // whatever it is painted on. Three sources disagreed about what a UV
   // means: an extruded shape gave inches, a box gave 0 to 1, and a Blender
   // export gave a few thousand. boxUV() replaces all three.
+  // The UV scale is read off each mesh's own world matrix, not off the root.
+  // boxUV() works on a geometry's local coordinates, and how many of those go
+  // to an inch depends on every transform between the geometry and the world,
+  // not just the one fit() put on the root.
+  //
+  // Both export conventions land on the same answer. A mesh modelled in metres
+  // under identity nodes has a world scale of 39.37; a mesh modelled in inches
+  // under a 0.0254 node scale has 0.0254 x 39.37 = 1. Reading the root unit
+  // instead was right only for the first and made the second 39x too dense.
+  const scaleOf = new THREE.Vector3();
+  const spare = { p: new THREE.Vector3(), q: new THREE.Quaternion() };
+
   function paint(group, mat) {
-    const scale = group.userData.uvScale || 1;
+    group.updateMatrixWorld(true);
     group.traverse((o) => {
       if (!o.isMesh) { return; }
-      if (o.geometry) { boxUV(o.geometry, scale); }
+      if (o.geometry) {
+        o.matrixWorld.decompose(spare.p, spare.q, scaleOf);
+        boxUV(o.geometry, Math.abs(scaleOf.x) || 1);
+      }
       o.material = mat;
       o.castShadow = true;
       o.receiveShadow = true;
