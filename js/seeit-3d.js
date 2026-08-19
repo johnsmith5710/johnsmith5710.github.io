@@ -43,33 +43,34 @@ const WALL_T = 3;            // the wall of a tub or a pan
 const APRON_R = 1.5;         // the radius on a rim
 const BAR_R = 0.7;           // a grab bar
 
-// A moulded piece carries a 1 in. nail flange along its front and top edges.
-// It is what the piece is fixed through, the wall finish is brought over it,
-// and on a finished wall none of it is in the room.
+// A moulded piece is fixed through a nail flange along its front and top
+// edges, and the wall finish is brought over it. So the wall laps the panel:
+// the outer inch of it is behind wall, not in the room.
 //
-// The piece goes in deeper than the flange is thick. An export is modelled
-// about 0.9 in. deeper than its nominal opening, that 0.9 in. being the flange
-// itself, so setting in by the flange alone leaves its tip level with the wall
-// face — which is what it was doing. Two inches puts the tip a clear inch
-// behind the face and lands the piece's back flat on the pocket.
-//
-// So the niche measures the opening plus two: a 32 in. alcove is 34 in. front
-// to back, a 36 in. is 38 in.
-//
-// Setting in alone is not enough, because the room's walls are opaque and a
-// piece pushed into one loses its own panel behind it. plainRoom() pockets the
-// niche by the same amount on all three walls to give it somewhere to go.
-const FLANGE_IN = 2;
+// This is stated, not measured. Working it out from the model's bounding box
+// made the cover whatever the exporter happened to leave beyond nominal, which
+// was 0.888 in. on the one surround exported and would be something else on the
+// next one.
+const OVERLAP = 1;
 
-// The flange on the top edge. The ledge that closes the pocket sits this far
-// below the top of the piece, so the flange finishes above it and inside the
-// wall. Level with the top, where the ledge used to be, left the flange on
-// show along the whole head of the surround.
-const FLANGE_UP = 1;
+// The niche is cut this much deeper than the opening it is named for, so there
+// is a bay behind the panel for the flange and the fixings. A 32 in. alcove
+// measures 34 in. front to back, a 36 in. measures 38 in.
+const NICHE_EXTRA = 2;
+
+// The base apron sits this far behind the surround's front face. It follows the
+// surround: against a Glue-Up panel, which is bonded on and has no flange, the
+// apron comes forward flush with it.
+const APRON_BACK = 1;
 // Nothing should be exactly coplanar with anything else. A generated side
 // panel's outer face lands on the opening line, which is where the niche wall
 // is, and two surfaces at the same depth flicker against each other.
 const SKIN = 0.03;
+
+// How far inboard the lip at the mouth reaches, which has to clear a panel to
+// cover its edge. A hair past the panel's inner face, so the two are never
+// exactly coplanar.
+const LIP_T = PANEL_T + SKIN;
 
 // How much product one colour tile covers. Every textured surface carries
 // UVs measured in inches, so this one number sets the density everywhere.
@@ -444,14 +445,14 @@ export async function createViewer(mount, options = {}) {
   // A named room is tried first and the plain alcove stands in whenever one
   // is not asked for, is not on offer, or does not load. The room is only
   // ever scenery, so nothing about the products depends on which one it is.
-  async function drawRoom(w, d, want, corner, sunkTop) {
+  async function drawRoom(w, d, want, corner, headY, flanged) {
     clear(room);
     const made = want ? await roomModel(want, d) : null;
     if (made) {
       room.add(made);
       return;
     }
-    plainRoom(w, d, corner, sunkTop);
+    plainRoom(w, d, corner, headY, flanged);
   }
 
   const roomCache = new Map();
@@ -514,157 +515,87 @@ export async function createViewer(mount, options = {}) {
 
   // A bathroom with the product set into it.
   //
-  // An alcove is a recess. The niche is as wide as the opening and only as
-  // deep as the product; at its mouth the wall turns outward and carries on,
-  // and the bathroom in front is wider than the product is. Running the two
-  // side walls the whole depth of the room instead, which is what this did,
-  // gives two parallel walls the width of the tub receding 12 ft — the end of
-  // a hallway rather than something built into a wall.
+  // The alcove is a rectangular recess in a flat wall. Everything at the mouth
+  // stands on one plane, z = 0: the wall either side of the opening, the wall
+  // above its head, and the lip that laps the panel. That is what a tiled
+  // alcove looks like, and it is why the niche reads as cut into something
+  // rather than as the end of a corridor.
   //
-  // A corner unit is not in an alcove and gets no return. Two of the room's
-  // own walls meet behind it and the floor opens out to one side.
-  function plainRoom(w, d, corner, sunkTop) {
-    const jamb = corner ? 0 : JAMB_W;      // wall either side of the mouth
+  // headY is where the top of the recess is, already dropped by OVERLAP so the
+  // wall crosses the panel's top edge. flanged says whether there is a flange
+  // to cover at all; a Glue-Up panel is bonded on and has none.
+  //
+  // A corner unit is not in a recess. Two of the room's own walls meet behind
+  // it and the floor opens out to one side, so it gets no lip and no head.
+  function plainRoom(w, d, corner, headY, flanged) {
+    const jamb = corner ? 0 : JAMB_W;
     const x0 = corner ? -w / 2 : -w / 2 - jamb;
     const x1 = corner ? -w / 2 + w + CORNER_OPEN : w / 2 + jamb;
-    const z0 = -d;                         // the back of the niche
-    const z1 = roomFront(w);               // the front of the room
-    frontZ = z1;                           // place() keeps the camera behind it
+    const z0 = -d;
+    const zBack = corner ? z0 : z0 - NICHE_EXTRA;   // the bay behind the panel
+    const z1 = roomFront(w);
+    frontZ = z1;
     const midX = (x0 + x1) / 2;
     const midZ = (z0 + z1) / 2;
     const fw = x1 - x0;
-    const fd = z1 - z0;
+    const fd = z1 - zBack;
+    const head = Math.min(ROOM_H, Math.max(1, headY || ROOM_H));
 
-    // One slab each for floor and ceiling, over the whole plan. What falls
-    // behind a jamb is hidden by it, so there is nothing to cut out.
+    // Floor and ceiling over the whole plan. What falls inside the wall is
+    // hidden by it, so there is nothing to cut out.
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd), floorMat);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.set(midX, 0, midZ);
+    floor.position.set(midX, 0, (zBack + z1) / 2);
     floor.receiveShadow = true;
     room.add(floor);
-    // The tile is the only thing in the picture at a known size, so it is what
-    // the eye measures the product against. 12 in. squares.
     floorTile(fw, fd);
 
-    // Closing the top is what stops the room reading as flats in a void. It
-    // faces down, so from a high angle the camera passes through it and the
-    // view is unobstructed.
     const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd), roomMat);
     ceiling.rotation.x = Math.PI / 2;
-    ceiling.position.set(midX, ROOM_H, midZ);
+    ceiling.position.set(midX, ROOM_H, (zBack + z1) / 2);
     room.add(ceiling);
 
-    // The back of the niche is only as wide as the niche. Past that it is
-    // behind a jamb and never seen.
-    //
-    // Where something is installed the niche is pocketed by FLANGE_IN, so a
-    // piece set into it has somewhere to sit instead of losing its own panel
-    // behind an opaque wall.
-    //
-    // The pocket closes FLANGE_UP below the top of the installation, not level
-    // with it. The top inch of the piece is flange, and the wall has to finish
-    // over it: closing level left that inch of flange in the open along the
-    // whole head of the surround.
-    const backW = corner ? fw : w;
-    const backX = corner ? midX : 0;
-    const pocket = sunkTop > 0 ? FLANGE_IN : 0;
-    const zPocket = z0 - pocket;
-    const ledge = Math.max(0, sunkTop - FLANGE_UP);
+    // ── The recess ───────────────────────────────────────────────────
+    const nicheD = z0 - zBack + d;          // opening depth plus the bay
 
-    if (pocket > 0) {
-      const lower = new THREE.Mesh(
-        new THREE.PlaneGeometry(backW, ledge), roomMat);
-      lower.position.set(backX, ledge / 2, zPocket);
-      lower.receiveShadow = true;
-      room.add(lower);
-
-      const upper = new THREE.Mesh(
-        new THREE.PlaneGeometry(backW, ROOM_H - ledge), roomMat);
-      upper.position.set(backX, ledge + (ROOM_H - ledge) / 2, z0);
-      upper.receiveShadow = true;
-      room.add(upper);
-
-      // The soffit closing the step, facing down onto the piece just below its
-      // flange. As wide as the pocket really is, side bays included, so that it
-      // meets the side reveals edge to edge instead of leaving a slot at each
-      // back corner or overlapping them and flickering along the join.
-      const soffit = new THREE.Mesh(
-        new THREE.PlaneGeometry(backW + 2 * (jamb > 0 ? pocket : 0), pocket),
-        roomMat);
-      soffit.rotation.x = Math.PI / 2;
-      soffit.position.set(backX, ledge, z0 - pocket / 2);
-      soffit.receiveShadow = true;
-      room.add(soffit);
-    } else {
-      const back = new THREE.Mesh(new THREE.PlaneGeometry(backW, ROOM_H), roomMat);
-      back.position.set(backX, ROOM_H / 2, z0);
-      back.receiveShadow = true;
-      room.add(back);
-    }
+    const back = new THREE.Mesh(
+      new THREE.PlaneGeometry(corner ? fw : w, corner ? ROOM_H : head), roomMat);
+    back.position.set(corner ? midX : 0, corner ? ROOM_H / 2 : head / 2, zBack);
+    back.receiveShadow = true;
+    room.add(back);
 
     if (jamb > 0) {
-      // The two walls of the niche, stopping at its mouth rather than running
-      // on. These are what the surround's end panels meet.
-      //
-      // Pocketed outward exactly as the back wall is pocketed backward, and
-      // for the same reason: an end panel is nailed through the same flange
-      // and the wall finish is brought over it, so behind the finished face
-      // there is a stud bay for the flange to sit in. Above the panel the wall
-      // comes back to the opening line, which is the face the top flange beds
-      // against. Held off by SKIN there, so nothing is exactly coplanar with
-      // a generated panel's outer face.
-      //
-      // The void this leaves either side of the panel is closed on every side
-      // a camera can reach it from: the jamb return in front, the reveal above,
-      // the pocket wall outside, and the panel itself inside. It is a stud bay,
-      // and it reads as one.
+      // The two sides of the recess, on the opening line, stopping at its head.
       for (const inward of [1, -1]) {
-        const xIn = inward * (-(w / 2) - SKIN);       // on the opening line
-        const xOut = inward * (-(w / 2) - pocket);    // out in the bay
-
-        if (pocket > 0) {
-          // Below the top of the installation: out in the bay, and running
-          // the full pocketed depth so it meets the pocketed back wall.
-          const lowerD = d + pocket;
-          const lower = new THREE.Mesh(
-            new THREE.PlaneGeometry(lowerD, ledge), roomMat);
-          lower.rotation.y = inward * Math.PI / 2;
-          lower.position.set(xOut, ledge / 2, zPocket + lowerD / 2);
-          lower.receiveShadow = true;
-          room.add(lower);
-
-          // Above it: on the opening line, and only as deep as the opening,
-          // because that is where the upper back wall stands.
-          const upper = new THREE.Mesh(
-            new THREE.PlaneGeometry(d, ROOM_H - ledge), roomMat);
-          upper.rotation.y = inward * Math.PI / 2;
-          upper.position.set(xIn, ledge + (ROOM_H - ledge) / 2, z0 + d / 2);
-          upper.receiveShadow = true;
-          room.add(upper);
-
-          // The reveal closing the step, facing down onto the panel just below
-          // its top flange. Only as deep as the opening: the back soffit
-          // already covers the pocketed band behind it, so the two tile the
-          // step between them rather than overlapping across it.
-          const revealW = Math.abs(xOut - xIn);
-          const reveal = new THREE.Mesh(
-            new THREE.PlaneGeometry(revealW, d), roomMat);
-          reveal.rotation.x = Math.PI / 2;
-          reveal.position.set((xIn + xOut) / 2, ledge, z0 + d / 2);
-          reveal.receiveShadow = true;
-          room.add(reveal);
-        } else {
-          const side = new THREE.Mesh(
-            new THREE.PlaneGeometry(d, ROOM_H), roomMat);
-          side.rotation.y = inward * Math.PI / 2;
-          side.position.set(xIn, ROOM_H / 2, z0 + d / 2);
-          side.receiveShadow = true;
-          room.add(side);
-        }
+        const side = new THREE.Mesh(
+          new THREE.PlaneGeometry(nicheD, head), roomMat);
+        side.rotation.y = inward * Math.PI / 2;
+        side.position.set(inward * (-(w / 2) - SKIN), head / 2,
+                          zBack + nicheD / 2);
+        side.receiveShadow = true;
+        room.add(side);
       }
 
-      // The return: the face of the wall the niche is cut into, from the mouth
-      // outward to the room. Facing the viewer, which is what reads as depth.
+      // The head of the recess, facing down. It laps the panel's top edge,
+      // because head was already dropped by OVERLAP.
+      const soffit = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, nicheD), roomMat);
+      soffit.rotation.x = Math.PI / 2;
+      soffit.position.set(0, head, zBack + nicheD / 2);
+      soffit.receiveShadow = true;
+      room.add(soffit);
+
+      // ── The wall the recess is cut into, all of it on z = 0 ─────────
+      // Above the head.
+      if (head < ROOM_H) {
+        const over = new THREE.Mesh(
+          new THREE.PlaneGeometry(w, ROOM_H - head), roomMat);
+        over.position.set(0, head + (ROOM_H - head) / 2, 0);
+        over.receiveShadow = true;
+        room.add(over);
+      }
+
+      // Either side of it.
       for (const inward of [1, -1]) {
         const face = new THREE.Mesh(
           new THREE.PlaneGeometry(jamb, ROOM_H), roomMat);
@@ -678,11 +609,35 @@ export async function createViewer(mount, options = {}) {
         b.receiveShadow = true;
         room.add(b);
       }
+
+      // ── The lip that laps the panel ─────────────────────────────────
+      // A return of the wall, OVERLAP deep, reaching LIP_T inboard so that the
+      // outer inch of the panel's front is behind it. Only where there is a
+      // flange to cover: a Glue-Up panel is finished to its edge and a lip over
+      // it would be hiding the product.
+      if (flanged) {
+        for (const inward of [1, -1]) {
+          const x = inward * (-(w / 2) + LIP_T);
+          const lip = new THREE.Mesh(
+            new THREE.PlaneGeometry(OVERLAP, head), roomMat);
+          lip.rotation.y = inward * Math.PI / 2;
+          lip.position.set(x, head / 2, -OVERLAP / 2);
+          lip.receiveShadow = true;
+          room.add(lip);
+
+          // The lip's own thickness, seen when looking along the wall.
+          const edge = new THREE.Mesh(
+            new THREE.PlaneGeometry(LIP_T + SKIN, head), roomMat);
+          edge.position.set(inward * (-(w / 2) + (LIP_T + SKIN) / 2), head / 2,
+                            -OVERLAP);
+          edge.receiveShadow = true;
+          room.add(edge);
+        }
+      }
     }
 
-    // The room's own side walls. In the alcove case they start at the mouth,
-    // because everything behind that line is inside the wall.
-    const sideZ0 = jamb > 0 ? 0 : z0;
+    // ── The room's own side walls ────────────────────────────────────
+    const sideZ0 = jamb > 0 ? 0 : zBack;
     const sideD = z1 - sideZ0;
     for (const [x, inward] of [[x0, 1], [x1, -1]]) {
       const side = new THREE.Mesh(new THREE.PlaneGeometry(sideD, ROOM_H), roomMat);
@@ -691,8 +646,6 @@ export async function createViewer(mount, options = {}) {
       side.receiveShadow = true;
       room.add(side);
 
-      // Baseboard, from the mouth forward. Behind that line the product is
-      // against the wall and a skirting would be inside it.
       if (z1 > 1) {
         const b = new THREE.Mesh(
           new THREE.BoxGeometry(BASE_T, BASE_H, z1), trimMat);
@@ -741,17 +694,25 @@ export async function createViewer(mount, options = {}) {
   }
 
   // ── Build the products ─────────────────────────────────────────────
-  // Answers with two heights. camTop is what the camera has to take in.
-  // sunkTop is how far up the pocket behind the pieces has to run, and is 0
-  // when there is nothing installed to hide it.
+  // Answers with what the room needs to know. camTop is what the camera has to
+  // take in. headY is where the recess is closed off, already dropped by
+  // OVERLAP so the wall laps the panel's top edge. flanged says whether there
+  // is a flange to cover at all.
   async function drawParts() {
     clear(parts);
-    if (!build) { return { camTop: 40, sunkTop: 0 }; }
+    if (!build) { return { camTop: 40, headY: ROOM_H, flanged: false }; }
 
     const w = build.opening.w;
     const d = build.opening.d;
     const f = build.fixture;
     const wall = build.wall;
+
+    // Does this build have a flange to cover? It is the surround that decides:
+    // the apron is measured from the surround's front, and a Glue-Up panel is
+    // bonded on with no flange at all. With no surround chosen, fall back to
+    // the base's own flag.
+    const flanged = wall ? wall.flange !== false
+                         : (f ? f.flange !== false : true);
 
     let rim = 0;
     let top = 40;
@@ -763,7 +724,7 @@ export async function createViewer(mount, options = {}) {
         obj: vessel(f.box[0] || w, f.box[1] || d, nominal,
                     build.shape === 'corner'),
         h: nominal
-      }), FLANGE_IN);
+      }), flanged ? -APRON_BACK : 0);
       // The rim is wherever the piece actually ends, not where the nominal
       // size says it should. The exported base is a shade over 4 in. tall
       // against a 3-1/2 in. nominal, and the surround has to meet it.
@@ -793,10 +754,11 @@ export async function createViewer(mount, options = {}) {
     if (wall) {
       const nominal = wall.box[2] || 59;
       const mat = finish(wall.color);
-      // Sunk by the flange. The base above is not: see FLANGE_IN.
+      // The surround's front face registers on the wall face itself; the
+      // apron above it sits APRON_BACK behind that. See OVERLAP.
       const made = await piece(wall, w, d,
                                () => ({ obj: panels(w, d, nominal), h: nominal }),
-                               FLANGE_IN);
+                               0);
       made.obj.position.y = rim;
       paint(made.obj, mat);
       parts.add(made.obj);
@@ -814,7 +776,16 @@ export async function createViewer(mount, options = {}) {
 
     // frame() is called by update() once the room is up, because it moves the
     // camera and the camera is clamped against the room's front edge.
-    return { camTop: top, sunkTop: (f || wall) ? top : 0 };
+    //
+    // headY is where the recess is closed off. It is OVERLAP below the top of
+    // what is installed, so the wall crosses the panel's top edge instead of
+    // stopping level with it. Full height when nothing is installed: there is
+    // no panel to lap and no reason to close the recess early.
+    return {
+      camTop: top,
+      headY: (f || wall) ? Math.max(1, top - (flanged ? OVERLAP : 0)) : ROOM_H,
+      flanged: flanged
+    };
   }
 
   // Three flat panels and a shelf, standing on y = 0. Used when the wall
@@ -843,11 +814,11 @@ export async function createViewer(mount, options = {}) {
   // from the numbers, so the page works before the exports are finished.
   // Either way the answer is the same pair: the thing, and how tall it
   // turned out, because the next piece up has to sit on it.
-  // sink is how far into the alcove the piece is set past its own rear face,
-  // to bury a modelled nail flange. Only an export has one; a generated shape
-  // is built to the finished size and passes 0.
+  // frontAt is the z the piece's front face registers on. 0 is the wall face;
+  // a base passes a little behind that. Only an export is placed this way; a
+  // generated shape is built to the opening and needs no registering.
   let gltfOff = false;
-  async function piece(spec, w, d, fallback, sink = 0) {
+  async function piece(spec, w, d, fallback, frontAt = 0) {
     const key = spec.part.split(' / ')[0];
     if (gltfOff || !exported.has(key)) { return fallback(); }
     const url = opts.modelPath + key + '.glb';
@@ -872,7 +843,7 @@ export async function createViewer(mount, options = {}) {
       // box[0] is the part's own width from the workbook. It is what the unit
       // has to be read against, not the opening: see fit().
       return fit(gltfCache.get(url).scene.clone(true), w, d,
-                 (spec.box && spec.box[0]) || w, sink, !!spec.mirror);
+                 (spec.box && spec.box[0]) || w, frontAt, !!spec.mirror);
     } catch (err) {
       // A missing loader stops every part. A bad file stops only that one.
       if (!GLTF) { gltfOff = true; } else { gltfCache.set(url, false); }
@@ -904,7 +875,7 @@ export async function createViewer(mount, options = {}) {
   // Height is therefore read off the model rather than the workbook. A
   // nominal size leaves out the flange, so a 3-1/2 in. base measures nearer
   // 5, and the surround above it has to stack on what is really there.
-  function fit(root, w, d, trueWidth, sink = 0, mirror = false) {
+  function fit(root, w, d, trueWidth, frontAt = 0, mirror = false) {
     const holder = new THREE.Group();
     holder.add(root);
     root.updateMatrixWorld(true);
@@ -936,14 +907,19 @@ export async function createViewer(mount, options = {}) {
     // opening it is drawn in, which is what makes boxUV()'s write-once guard
     // safe on geometry the cache shares between clones.
 
-    // X centred in the opening, Y on the floor, and Z pushed back until the
-    // rear face meets the back wall — then sink further by however much of the
-    // front is nail flange, so that what is left in the room is what a
-    // finished wall leaves in the room. Back-aligned rather than centred,
-    // because the back is the face with something to register against.
+    // X centred in the opening, Y on the floor, and the FRONT face registered
+    // on frontAt. Front-aligned, not back-aligned: the front is the edge the
+    // wall laps and the edge the apron is measured from, so it is the one that
+    // has to land on a stated line. Where the back ends up follows from the
+    // part's own depth, and the niche is cut NICHE_EXTRA deeper than the
+    // opening so there is always room for it.
+    //
+    // Registering the back instead is what tied the cover to the bounding box:
+    // how much stood proud at the front became whatever the exporter had left
+    // beyond nominal, which is not a number anybody chose.
     const box = new THREE.Box3().setFromObject(root);
     const mid = box.getCenter(new THREE.Vector3());
-    root.position.set(-mid.x, -box.min.y, -d - box.min.z - sink);
+    root.position.set(-mid.x, -box.min.y, frontAt - box.max.z);
     root.updateMatrixWorld(true);
 
     return { obj: holder, h: box.max.y - box.min.y };
@@ -1105,7 +1081,8 @@ export async function createViewer(mount, options = {}) {
       // Neither depends on the other's geometry, only on the opening.
       const built = await drawParts();
       if (!alive || build !== next) { return; }
-      await drawRoom(w, d, next.room, next.shape === 'corner', built.sunkTop);
+      await drawRoom(w, d, next.room, next.shape === 'corner',
+                     built.headY, built.flanged);
       if (!alive) { return; }
       // Last, because it moves the camera and the camera is clamped against
       // the room's front edge, which drawRoom has just set.
