@@ -67,11 +67,17 @@ const APRON_BACK = 1;
 // is, and two surfaces at the same depth flicker against each other.
 const SKIN = 0.03;
 
-// How far inboard the return at the mouth reaches. It has to clear the panel
-// to cover its edge, so it is at least PANEL_T, but how much further it comes
-// is a matter of how the wall was finished rather than of the panel: this is
-// set by eye against the drawing, not derived. It must stay above PANEL_T.
-const LIP_T = 1.5;
+// How far the cover stands proud of the panel it laps: inboard of the opening
+// at the mouth, and inboard of the panel's faces at the top. It has to clear
+// the panel to cover its edge, so it is at least PANEL_T, but how much further
+// it comes is a matter of how the wall was finished rather than of the panel.
+// Set by eye against the drawing, not derived. It must stay above PANEL_T.
+//
+// An inch, the same as the flange it hides is wide. 1.5 read as too heavy a
+// band around the opening. They are still two numbers because they are two
+// measurements — how far the cover reaches across the panel, and how much of
+// the panel's depth is behind it — and either can be tuned alone.
+const LIP_T = 1;
 
 // How much product one colour tile covers. Every textured surface carries
 // UVs measured in inches, so this one number sets the density everywhere.
@@ -473,14 +479,14 @@ export async function createViewer(mount, options = {}) {
   // A named room is tried first and the plain alcove stands in whenever one
   // is not asked for, is not on offer, or does not load. The room is only
   // ever scenery, so nothing about the products depends on which one it is.
-  async function drawRoom(w, d, want, corner, flanged) {
+  async function drawRoom(w, d, want, corner, built) {
     clear(room);
     const made = want ? await roomModel(want, d) : null;
     if (made) {
       room.add(made);
       return;
     }
-    plainRoom(w, d, corner, flanged);
+    plainRoom(w, d, corner, built);
   }
 
   const roomCache = new Map();
@@ -554,12 +560,14 @@ export async function createViewer(mount, options = {}) {
   // no soffit: above the surround you are looking at the back of the recess,
   // which is where the top flange beds.
   //
-  // flanged says whether there is a flange to cover at all; a Glue-Up panel is
-  // bonded on and has none.
+  // built is what drawParts() worked out: whether there is a flange to cover at
+  // all — a Glue-Up panel is bonded on and has none — and how high the surround
+  // reached, which is where the band that laps its top edge goes.
   //
   // A corner unit is not in a recess. Two of the room's own walls meet behind
   // it and the floor opens out to one side, so it gets no return.
-  function plainRoom(w, d, corner, flanged) {
+  function plainRoom(w, d, corner, built) {
+    const { flanged, wallTop } = built;
     const jamb = corner ? 0 : JAMB_W;
     const x0 = corner ? -w / 2 : -w / 2 - jamb;
     const x1 = corner ? -w / 2 + w + CORNER_OPEN : w / 2 + jamb;
@@ -627,22 +635,69 @@ export async function createViewer(mount, options = {}) {
       // it. Only where there is a flange to cover: a Glue-Up panel is finished
       // to its edge and a return over it would be hiding the product.
       //
-      // A box, not a pair of planes. It needs a face on z = 0 as well as the
-      // one facing inboard, because that front face is what makes it read as
-      // wall laid over the flange. Built from planes it had no front, so on a
-      // single-sided material you looked straight past it to the face an inch
-      // back and the lap read as a notch cut into the wall. It starts SKIN
-      // outboard of the opening line, against the side of the recess, so there
-      // is no hairline where the two meet.
+      // A box, not a pair of planes. It needs a face at the front as well as
+      // the one facing inboard, because that front face is what makes it read
+      // as wall laid over the flange. Built from planes it had no front, so on
+      // a single-sided material you looked straight past it to the face an inch
+      // back and the lap read as a notch cut into the wall.
+      //
+      // It oversteps by SKIN on both of the faces it meets: outboard against
+      // the side of the recess, and forward of the wall plane. The panel
+      // registers its own front on that plane, and two surfaces at one depth
+      // flicker against each other.
       if (flanged) {
         for (const inward of [1, -1]) {
           const lap = new THREE.Mesh(
-            new THREE.BoxGeometry(LIP_T + SKIN, ROOM_H, OVERLAP), roomMat);
+            new THREE.BoxGeometry(LIP_T + SKIN, ROOM_H, OVERLAP + SKIN), roomMat);
           lap.position.set(inward * (-(w / 2) + (LIP_T - SKIN) / 2),
-                           ROOM_H / 2, -OVERLAP / 2);
+                           ROOM_H / 2, -(OVERLAP - SKIN) / 2);
           lap.receiveShadow = true;
           room.add(lap);
         }
+      }
+
+      // ── The band that laps the top of the surround ──────────────────
+      // The same cover, turned on its side. The flange runs along the top edge
+      // of the panels as well as their front, and the wall finish is brought
+      // down over it, so this hangs OVERLAP over the top of the piece and
+      // stands LIP_T proud of its faces, which is what the return at the mouth
+      // does in plan.
+      //
+      // Only where a surround was drawn. A bare base gets none: its own flange
+      // is under the surround, and with nothing up there to cover a band would
+      // be a shelf floating in an empty alcove.
+      if (flanged && wallTop > 0) {
+        // SKIN above the top of the piece, for the same reason the mouth
+        // return oversteps: the piece's own top face is at wallTop.
+        const hy = wallTop - (OVERLAP - SKIN) / 2;
+        const hh = OVERLAP + SKIN;
+
+        // Down each side, over the top edge of the end panels: the same
+        // footprint in plan as the return at the mouth, carried to the back.
+        // It stops where that return starts rather than running through it.
+        // Overlapping it would have put two faces on one plane, which is the
+        // one thing SKIN exists to prevent.
+        const sideD = nicheD - OVERLAP;
+        for (const inward of [1, -1]) {
+          const bandSide = new THREE.Mesh(
+            new THREE.BoxGeometry(LIP_T + SKIN, hh, sideD), roomMat);
+          bandSide.position.set(inward * (-(w / 2) + (LIP_T - SKIN) / 2), hy,
+                                -OVERLAP - sideD / 2);
+          bandSide.receiveShadow = true;
+          room.add(bandSide);
+        }
+
+        // And across the back, between the two side pieces for the same reason.
+        // This one reaches further than LIP_T, because the back panel does not
+        // stand against the framing: it is OVERLAP forward of it and the top
+        // flange is in that bay, so the band covers the bay and then LIP_T of
+        // the panel beyond it.
+        const backD = NICHE_EXTRA - OVERLAP + LIP_T;
+        const bandBack = new THREE.Mesh(
+          new THREE.BoxGeometry(w - 2 * LIP_T, hh, backD), roomMat);
+        bandBack.position.set(0, hy, zBack + backD / 2);
+        bandBack.receiveShadow = true;
+        room.add(bandBack);
       }
     }
 
@@ -705,10 +760,11 @@ export async function createViewer(mount, options = {}) {
 
   // ── Build the products ─────────────────────────────────────────────
   // Answers with what the room needs to know: how high the camera has to reach,
-  // and whether there is a flange for the wall to lap.
+  // whether there is a flange for the wall to lap, and where the top of the
+  // surround came out, which is the line its top flange is covered along.
   async function drawParts() {
     clear(parts);
-    if (!build) { return { camTop: 40, flanged: false }; }
+    if (!build) { return { camTop: 40, flanged: false, wallTop: 0 }; }
 
     const w = build.opening.w;
     const d = build.opening.d;
@@ -725,6 +781,7 @@ export async function createViewer(mount, options = {}) {
 
     let rim = 0;
     let top = 40;
+    let wallTop = 0;             // 0 = no surround, so nothing to lap up there
 
     if (f) {
       const nominal = f.box[2] || NOMINAL_H[f.sits] || 19;
@@ -780,6 +837,9 @@ export async function createViewer(mount, options = {}) {
       paint(made.obj, mat);
       parts.add(made.obj);
       top = rim + made.h;
+      // Where the piece really ends, flange and all, because that is the edge
+      // the band at the top has to cover. Read off the model, like the rim.
+      wallTop = top;
 
       for (const which of (build.bars || [])) {
         const bar = which === 'back'
@@ -793,7 +853,7 @@ export async function createViewer(mount, options = {}) {
 
     // frame() is called by update() once the room is up, because it moves the
     // camera and the camera is clamped against the room's front edge.
-    return { camTop: top, flanged: flanged };
+    return { camTop: top, flanged: flanged, wallTop: wallTop };
   }
 
   // Three flat panels and a shelf, standing on y = 0, front face on z = 0.
@@ -1110,7 +1170,7 @@ export async function createViewer(mount, options = {}) {
       // Neither depends on the other's geometry, only on the opening.
       const built = await drawParts();
       if (!alive || build !== next) { return; }
-      await drawRoom(w, d, next.room, next.shape === 'corner', built.flanged);
+      await drawRoom(w, d, next.room, next.shape === 'corner', built);
       if (!alive) { return; }
       // Last, because it moves the camera and the camera is clamped against
       // the room's front edge, which drawRoom has just set.
