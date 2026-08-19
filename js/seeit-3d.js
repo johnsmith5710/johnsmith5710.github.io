@@ -64,7 +64,7 @@ const SKIN = 0.03;
 // How much product one colour tile covers. Every textured surface carries
 // UVs measured in inches, so this one number sets the density everywhere.
 // See boxUV().
-const TILE_IN = 26;
+const TILE_IN = 52;
 
 // The room the products stand in.
 const FLOOR_TILE_IN = 12;    // a 12 in. floor tile, the commonest size
