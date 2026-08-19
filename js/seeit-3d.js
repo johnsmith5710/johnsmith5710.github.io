@@ -43,19 +43,29 @@ const WALL_T = 3;            // the wall of a tub or a pan
 const APRON_R = 1.5;         // the radius on a rim
 const BAR_R = 0.7;           // a grab bar
 
-// A moulded piece carries a nail flange along its edges. It is what the piece
-// is fixed through, and the wall finish is brought over it, so on a finished
-// wall none of it is in the room. An export has the flange modelled, which put
-// the front face of a surround about 0.9 in. proud of the wall it is supposed
-// to be set into. Base and surround are both sunk by this much, so the two
-// bear on the same plane, the way they do on a stud.
+// A moulded piece carries a 1 in. nail flange along its front and top edges.
+// It is what the piece is fixed through, the wall finish is brought over it,
+// and on a finished wall none of it is in the room.
 //
-// Sinking alone is not enough: the room's back wall is opaque, so a piece
-// pushed into it loses its own back panel behind the wall. plainRoom() pockets
-// the niche by the same amount to give it somewhere to go. The pocket stops at
-// the top of the installation, because that face is what the top flange beds
-// against and a step above the surround would show.
-const FLANGE_IN = 1;
+// The piece goes in deeper than the flange is thick. An export is modelled
+// about 0.9 in. deeper than its nominal opening, that 0.9 in. being the flange
+// itself, so setting in by the flange alone leaves its tip level with the wall
+// face — which is what it was doing. Two inches puts the tip a clear inch
+// behind the face and lands the piece's back flat on the pocket.
+//
+// So the niche measures the opening plus two: a 32 in. alcove is 34 in. front
+// to back, a 36 in. is 38 in.
+//
+// Setting in alone is not enough, because the room's walls are opaque and a
+// piece pushed into one loses its own panel behind it. plainRoom() pockets the
+// niche by the same amount on all three walls to give it somewhere to go.
+const FLANGE_IN = 2;
+
+// The flange on the top edge. The ledge that closes the pocket sits this far
+// below the top of the piece, so the flange finishes above it and inside the
+// wall. Level with the top, where the ledge used to be, left the flange on
+// show along the whole head of the surround.
+const FLANGE_UP = 1;
 // Nothing should be exactly coplanar with anything else. A generated side
 // panel's outer face lands on the opening line, which is where the niche wall
 // is, and two surfaces at the same depth flicker against each other.
@@ -64,6 +74,11 @@ const SKIN = 0.03;
 // How much product one colour tile covers. Every textured surface carries
 // UVs measured in inches, so this one number sets the density everywhere.
 // See boxUV().
+//
+// Set larger than the largest face on any part, so no surface ever shows the
+// tile repeating. That is not a cheat: a gelcoat panel is one moulded piece
+// and a seam across it would be the wrong thing to draw. The tallest surround
+// is 78 in., so this clears it. Checked against the workbook, not guessed.
 const TILE_IN = 104;
 
 // The room the products stand in.
@@ -542,39 +557,42 @@ export async function createViewer(mount, options = {}) {
     // The back of the niche is only as wide as the niche. Past that it is
     // behind a jamb and never seen.
     //
-    // Where something is installed it is pocketed by the flange depth, so a
-    // sunk piece has somewhere to sit instead of losing its own back panel
-    // behind an opaque wall. The pocket stops at the top of the installation:
-    // above that line the wall comes forward to the original plane, because
-    // that is the face the top flange beds against, and a step left in the
-    // open above the surround would be the first thing you noticed.
+    // Where something is installed the niche is pocketed by FLANGE_IN, so a
+    // piece set into it has somewhere to sit instead of losing its own panel
+    // behind an opaque wall.
+    //
+    // The pocket closes FLANGE_UP below the top of the installation, not level
+    // with it. The top inch of the piece is flange, and the wall has to finish
+    // over it: closing level left that inch of flange in the open along the
+    // whole head of the surround.
     const backW = corner ? fw : w;
     const backX = corner ? midX : 0;
     const pocket = sunkTop > 0 ? FLANGE_IN : 0;
     const zPocket = z0 - pocket;
+    const ledge = Math.max(0, sunkTop - FLANGE_UP);
 
     if (pocket > 0) {
       const lower = new THREE.Mesh(
-        new THREE.PlaneGeometry(backW, sunkTop), roomMat);
-      lower.position.set(backX, sunkTop / 2, zPocket);
+        new THREE.PlaneGeometry(backW, ledge), roomMat);
+      lower.position.set(backX, ledge / 2, zPocket);
       lower.receiveShadow = true;
       room.add(lower);
 
       const upper = new THREE.Mesh(
-        new THREE.PlaneGeometry(backW, ROOM_H - sunkTop), roomMat);
-      upper.position.set(backX, sunkTop + (ROOM_H - sunkTop) / 2, z0);
+        new THREE.PlaneGeometry(backW, ROOM_H - ledge), roomMat);
+      upper.position.set(backX, ledge + (ROOM_H - ledge) / 2, z0);
       upper.receiveShadow = true;
       room.add(upper);
 
-      // The soffit closing the step, facing down onto the top of the piece.
-      // As wide as the pocket really is, side bays included, so that it meets
-      // the side reveals edge to edge instead of leaving a slot at each back
-      // corner or overlapping them and flickering along the join.
+      // The soffit closing the step, facing down onto the piece just below its
+      // flange. As wide as the pocket really is, side bays included, so that it
+      // meets the side reveals edge to edge instead of leaving a slot at each
+      // back corner or overlapping them and flickering along the join.
       const soffit = new THREE.Mesh(
         new THREE.PlaneGeometry(backW + 2 * (jamb > 0 ? pocket : 0), pocket),
         roomMat);
       soffit.rotation.x = Math.PI / 2;
-      soffit.position.set(backX, sunkTop, z0 - pocket / 2);
+      soffit.position.set(backX, ledge, z0 - pocket / 2);
       soffit.receiveShadow = true;
       room.add(soffit);
     } else {
@@ -609,30 +627,30 @@ export async function createViewer(mount, options = {}) {
           // the full pocketed depth so it meets the pocketed back wall.
           const lowerD = d + pocket;
           const lower = new THREE.Mesh(
-            new THREE.PlaneGeometry(lowerD, sunkTop), roomMat);
+            new THREE.PlaneGeometry(lowerD, ledge), roomMat);
           lower.rotation.y = inward * Math.PI / 2;
-          lower.position.set(xOut, sunkTop / 2, zPocket + lowerD / 2);
+          lower.position.set(xOut, ledge / 2, zPocket + lowerD / 2);
           lower.receiveShadow = true;
           room.add(lower);
 
           // Above it: on the opening line, and only as deep as the opening,
           // because that is where the upper back wall stands.
           const upper = new THREE.Mesh(
-            new THREE.PlaneGeometry(d, ROOM_H - sunkTop), roomMat);
+            new THREE.PlaneGeometry(d, ROOM_H - ledge), roomMat);
           upper.rotation.y = inward * Math.PI / 2;
-          upper.position.set(xIn, sunkTop + (ROOM_H - sunkTop) / 2, z0 + d / 2);
+          upper.position.set(xIn, ledge + (ROOM_H - ledge) / 2, z0 + d / 2);
           upper.receiveShadow = true;
           room.add(upper);
 
-          // The reveal closing the step, facing down onto the panel's top
-          // edge. Only as deep as the opening: the back soffit already covers
-          // the pocketed band behind it, so the two tile the step between them
-          // rather than overlapping across it.
+          // The reveal closing the step, facing down onto the panel just below
+          // its top flange. Only as deep as the opening: the back soffit
+          // already covers the pocketed band behind it, so the two tile the
+          // step between them rather than overlapping across it.
           const revealW = Math.abs(xOut - xIn);
           const reveal = new THREE.Mesh(
             new THREE.PlaneGeometry(revealW, d), roomMat);
           reveal.rotation.x = Math.PI / 2;
-          reveal.position.set((xIn + xOut) / 2, sunkTop, z0 + d / 2);
+          reveal.position.set((xIn + xOut) / 2, ledge, z0 + d / 2);
           reveal.receiveShadow = true;
           room.add(reveal);
         } else {
@@ -1181,10 +1199,10 @@ function dropMaterial(mat) {
 // This replaces whatever UVs the geometry arrived with, and that is the
 // point. Three sources disagreed: ExtrudeGeometry writes the vertex
 // coordinates, so it was already inches; BoxGeometry and PlaneGeometry write
-// 0 to 1 per face, which made a tile 26 times too big; and the Blender
-// exports carry a projection from the CAD import running to a few thousand,
-// which made a tile about fifty times too small. One rule now covers all
-// three, so a generated shape and an export show the same finish.
+// 0 to 1 per face, which stretched one tile over a whole panel; and the
+// Blender exports carry a projection from the CAD import running to a few
+// thousand, which shrank a tile to about half an inch. One rule now covers
+// all three, so a generated shape and an export show the same finish.
 //
 // scale converts a model unit to an inch. Generated shapes are drawn in
 // inches and pass 1. An export passes what snapUnit() worked out.
