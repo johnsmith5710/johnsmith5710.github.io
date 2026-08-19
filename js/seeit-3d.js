@@ -656,21 +656,24 @@ export async function createViewer(mount, options = {}) {
         }
       }
 
-      // ── The band that laps the top of the surround ──────────────────
-      // The same cover, turned on its side. The flange runs along the top edge
-      // of the panels as well as their front, and the wall finish is brought
-      // down over it, so this hangs OVERLAP over the top of the piece and
-      // stands LIP_T proud of its faces, which is what the return at the mouth
-      // does in plan.
+      // ── The wall above the surround, lapped over its top edge ───────
+      // The same cover as at the mouth, turned on its side, and it is not a band
+      // at the top edge but everything above it. Above the piece the recess is
+      // finished — board, then tile — and that finish is brought down over the
+      // top flange the way it is brought over the front one. So it stands LIP_T
+      // proud of the panel's faces, laps OVERLAP down over its top, and runs
+      // from there to the ceiling.
+      //
+      // A 1 in. band was the first attempt and read as trim stuck to the top of
+      // the surround, because above it the recess went back to bare framing.
       //
       // Only where a surround was drawn. A bare base gets none: its own flange
-      // is under the surround, and with nothing up there to cover a band would
-      // be a shelf floating in an empty alcove.
+      // is under the surround, and with nothing up there to cover this would be
+      // a lining hanging in an empty alcove.
       if (flanged && wallTop > 0) {
-        // SKIN above the top of the piece, for the same reason the mouth
-        // return oversteps: the piece's own top face is at wallTop.
-        const hy = wallTop - (OVERLAP - SKIN) / 2;
-        const hh = OVERLAP + SKIN;
+        const hLo = wallTop - OVERLAP;      // OVERLAP down over the top edge
+        const hh = ROOM_H - hLo;            // and up to the ceiling
+        const hy = hLo + hh / 2;
 
         // Down each side, over the top edge of the end panels: the same
         // footprint in plan as the return at the mouth, carried to the back.
@@ -679,25 +682,25 @@ export async function createViewer(mount, options = {}) {
         // one thing SKIN exists to prevent.
         const sideD = nicheD - OVERLAP;
         for (const inward of [1, -1]) {
-          const bandSide = new THREE.Mesh(
+          const overSide = new THREE.Mesh(
             new THREE.BoxGeometry(LIP_T + SKIN, hh, sideD), roomMat);
-          bandSide.position.set(inward * (-(w / 2) + (LIP_T - SKIN) / 2), hy,
+          overSide.position.set(inward * (-(w / 2) + (LIP_T - SKIN) / 2), hy,
                                 -OVERLAP - sideD / 2);
-          bandSide.receiveShadow = true;
-          room.add(bandSide);
+          overSide.receiveShadow = true;
+          room.add(overSide);
         }
 
         // And across the back, between the two side pieces for the same reason.
-        // This one reaches further than LIP_T, because the back panel does not
-        // stand against the framing: it is OVERLAP forward of it and the top
-        // flange is in that bay, so the band covers the bay and then LIP_T of
-        // the panel beyond it.
+        // This one stands further out than LIP_T, because the back panel does
+        // not stand against the framing: it is OVERLAP forward of it and the top
+        // flange is in that bay, so the lining closes the bay and then laps
+        // LIP_T of the panel beyond it.
         const backD = NICHE_EXTRA - OVERLAP + LIP_T;
-        const bandBack = new THREE.Mesh(
+        const overBack = new THREE.Mesh(
           new THREE.BoxGeometry(w - 2 * LIP_T, hh, backD), roomMat);
-        bandBack.position.set(0, hy, zBack + backD / 2);
-        bandBack.receiveShadow = true;
-        room.add(bandBack);
+        overBack.position.set(0, hy, zBack + backD / 2);
+        overBack.receiveShadow = true;
+        room.add(overBack);
       }
     }
 
