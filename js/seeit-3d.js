@@ -116,6 +116,11 @@ export async function createViewer(mount, options = {}) {
     // niche, useless to a customer, so the page turns it on from ?freecam
     // rather than shipping it in the interface.
     freeRoam: false,
+    // Ask for screen-space indirect lighting. It needs WebGPU, so this is a
+    // request rather than a setting: where WebGPU is missing, or the node build
+    // will not load, the viewer draws the plain WebGL picture instead and says
+    // so once in the console. See gi() below.
+    gi: false,
     onReady: null
   }, options);
 
@@ -135,9 +140,58 @@ export async function createViewer(mount, options = {}) {
     });
   }
 
-  const renderer = new THREE.WebGLRenderer({
-    antialias: true, alpha: false, powerPreference: 'high-performance'
-  });
+  // ── The renderer ───────────────────────────────────────────────────
+  // Two of them, and the same scene either way.
+  //
+  // The picture we would rather draw needs screen-space indirect lighting,
+  // which three.js has as a node — SSGINode, from the technique published as
+  // Screen-Space Indirect Lighting with Visibility Bitmask. It runs on the node
+  // renderer only, and the node renderer means WebGPU: the visibility bitmask
+  // is counted with countOneBits, a WGSL builtin that the WebGL fallback has no
+  // GLSL name for, so it does not merely look worse there — the shader does not
+  // compile. Hence a real branch rather than a flag.
+  //
+  // What makes the branch affordable is that both builds import the same
+  // three.core.min.js. The classes — every geometry, every material, the scene
+  // itself — are one module instance shared between them, and only the renderer
+  // half differs. Nothing below this block is written twice.
+  //
+  // The node half is 700 KB and it is loaded by import() at the point of use,
+  // so a visitor on the plain path never asks for it.
+  let nodes = null;                    // { gpu, tsl, ssgi } once loaded
+  let renderer = null;
+
+  if (opts.gi && typeof navigator !== 'undefined' && navigator.gpu) {
+    try {
+      const [gpu, tsl, node] = await Promise.all([
+        import('three/webgpu'),
+        import('three/tsl'),
+        import('three/addons/tsl/display/SSGINode.js')
+      ]);
+      renderer = new gpu.WebGPURenderer({ antialias: true, alpha: false });
+      // Asynchronous, unlike the WebGL one. Everything here waits on it,
+      // because a render before the device is up draws nothing at all.
+      await renderer.init();
+      nodes = { gpu, tsl, ssgi: node.ssgi };
+    } catch (err) {
+      // Any failure at all is a fallback, not an error: an old browser, a
+      // driver that will not give up a device, a file that did not deploy.
+      // Said out loud once, because otherwise the picture quietly changes and
+      // nobody knows which one they are looking at.
+      console.warn('seeit-3d: no indirect lighting on this browser, so the '
+                   + 'plain picture is drawn instead.', err);
+      if (renderer) { renderer.dispose(); }
+      renderer = null;
+      nodes = null;
+    }
+  }
+
+  if (!renderer) {
+    renderer = new THREE.WebGLRenderer({
+      antialias: true, alpha: false, powerPreference: 'high-performance'
+    });
+  }
+
   // The pixel ratio cap is decided in resize(), because it depends on how
   // wide the canvas actually is and that changes when a phone is turned.
   renderer.shadowMap.enabled = true;
@@ -146,6 +200,15 @@ export async function createViewer(mount, options = {}) {
   renderer.toneMappingExposure = 1.05;
   renderer.domElement.className = 'seeit-canvas';
   mount.appendChild(renderer.domElement);
+
+  // The one API difference the rest of this file would otherwise trip over.
+  // WebGLRenderer keeps it on a capabilities object; the node renderer asks its
+  // backend and answers 16 on WebGPU.
+  function maxAnisotropy() {
+    return renderer.capabilities
+      ? renderer.capabilities.getMaxAnisotropy()
+      : renderer.getMaxAnisotropy();
+  }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xeef2f7);
@@ -157,7 +220,10 @@ export async function createViewer(mount, options = {}) {
   // It gives gelcoat something to reflect without shipping an HDR file.
   // far has to clear the studio box. The default is 100 and the box is 450
   // out, so leaving it would clip every panel out of the reflection.
-  const pmrem = new THREE.PMREMGenerator(renderer);
+  // From whichever build owns the renderer. Both export a PMREMGenerator and
+  // they are not interchangeable: each bakes with its own renderer's passes.
+  const PMREM = nodes ? nodes.gpu.PMREMGenerator : THREE.PMREMGenerator;
+  const pmrem = new PMREM(renderer);
   const box = studio();
   scene.environment = pmrem.fromScene(box, 0.04, 1, 2000).texture;
   pmrem.dispose();
@@ -205,7 +271,7 @@ export async function createViewer(mount, options = {}) {
       // UVs are in inches on every painted surface, so this is literally
       // one tile across TILE_IN inches.
       t.repeat.set(1 / TILE_IN, 1 / TILE_IN);
-      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      t.anisotropy = maxAnisotropy();
       tiles.set(name, t);
     }
     return tiles.get(name);
@@ -445,6 +511,65 @@ export async function createViewer(mount, options = {}) {
   const ro = new ResizeObserver(resize);
   ro.observe(mount);
 
+  // ── Indirect lighting ──────────────────────────────────────────────
+  // Built once, around the scene and the camera, and then left alone: the node
+  // graph does not care that the scene is torn down and rebuilt between
+  // answers, because the pass reads whatever is in the scene at render time.
+  //
+  // The scene is drawn to three targets at once instead of straight to the
+  // canvas — colour, the diffuse colour before lighting, and the view-space
+  // normal — because SSGI needs to know what each pixel is made of before it
+  // can work out what light it should be bouncing. Depth comes free with the
+  // pass. Then the composite: colour attenuated by the occlusion term, plus the
+  // surface's own diffuse lit by the gathered indirect light.
+  //
+  // This is the arrangement from the three.js example, less the parts a product
+  // viewer has no use for: no velocity target and no temporal antialiasing,
+  // because both exist to spread cost across frames and this viewer draws one
+  // frame and then stops. Temporal filtering is off for the same reason — with
+  // nothing accumulating between frames it would only ever show its first,
+  // noisiest estimate. The sample counts are raised instead, which a viewer that
+  // renders on demand can afford and a game cannot.
+  let pipeline = null;
+  if (nodes) {
+    const T = nodes.tsl;
+    pipeline = new nodes.gpu.RenderPipeline(renderer);
+
+    const scenePass = T.pass(scene, camera);
+    scenePass.setMRT(T.mrt({
+      output: T.output,
+      diffuseColor: T.diffuseColor,
+      normal: T.packNormalToRGB(T.normalView)
+    }));
+
+    const colour = scenePass.getTextureNode('output');
+    const diffuse = scenePass.getTextureNode('diffuseColor');
+    const depth = scenePass.getTextureNode('depth');
+    const packed = scenePass.getTextureNode('normal');
+
+    // A byte per channel is enough for a colour and for a packed normal, and
+    // halves what these two targets cost to write and read back.
+    scenePass.getTexture('diffuseColor').type = THREE.UnsignedByteType;
+    scenePass.getTexture('normal').type = THREE.UnsignedByteType;
+
+    const normal = T.sample((uv) => T.unpackRGBToNormal(packed.sample(uv)));
+
+    // SSGINode's own documented High preset for the no-temporal-filtering case,
+    // which is the case this viewer is in: 4 slices of 12 steps, 96 samples a
+    // pixel. Their numbers, not a guess of mine — the presets are listed in the
+    // file, and they are given separately for filtered and unfiltered because
+    // the unfiltered one has to stand on its own in a single frame.
+    const gi = nodes.ssgi(colour, depth, normal, camera);
+    gi.sliceCount.value = 4;
+    gi.stepCount.value = 12;
+    gi.useTemporalFiltering = false;
+
+    pipeline.outputNode = T.vec4(
+      T.add(colour.rgb.mul(gi.getAONode().r),
+            diffuse.rgb.mul(gi.getGINode().rgb)),
+      colour.a);
+  }
+
   // ── Draw only when something changed ───────────────────────────────
   // Demand-driven: no continuous rAF while idle. Saves battery on mobile
   // and drops CPU to near zero when the user is reading the build list.
@@ -454,7 +579,9 @@ export async function createViewer(mount, options = {}) {
     if (!alive || document.hidden) { return; }
     if (dirty) {
       dirty = false;
-      renderer.render(scene, camera);
+      // The pipeline renders the scene itself, through the pass it was built
+      // around, so it is one call or the other and never both.
+      if (pipeline) { pipeline.render(); } else { renderer.render(scene, camera); }
     }
   }
   function render() {
@@ -754,7 +881,7 @@ export async function createViewer(mount, options = {}) {
       tileTex = new THREE.CanvasTexture(c);
       tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping;
       tileTex.colorSpace = THREE.SRGBColorSpace;
-      tileTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      tileTex.anisotropy = maxAnisotropy();
       floorMat.map = tileTex;
       floorMat.needsUpdate = true;
     }
@@ -1217,6 +1344,11 @@ export async function createViewer(mount, options = {}) {
     }
     tiles.forEach((t) => t.dispose());
     if (scene.environment) { scene.environment.dispose(); }
+    // Before the renderer, because the pipeline holds render targets on it.
+    // Its own dispose is the only thing that releases the three targets the
+    // scene pass writes, and at this size those are the largest single thing
+    // the viewer has on the GPU.
+    if (pipeline && pipeline.dispose) { pipeline.dispose(); }
     renderer.dispose();
     if (renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);

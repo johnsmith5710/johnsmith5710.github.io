@@ -13,6 +13,8 @@
   <script type="importmap">
   {"imports": {
     "three": "../js/vendor/three.module.min.js",
+    "three/webgpu": "../js/vendor/three.webgpu.min.js",
+    "three/tsl": "../js/vendor/three.tsl.js",
     "three/addons/": "../js/vendor/addons/"
   }}
   </script>
@@ -910,6 +912,10 @@
           // address bar: SeeIt.html?freecam. Nothing in the interface turns it
           // on, so a customer cannot find it, and it costs nothing to leave in.
           freeRoam: /[?&]freecam(=|&|$)/.test(window.location.search),
+          // Screen-space indirect lighting, which needs WebGPU. Asked for by
+          // default and dropped without a word on a browser that cannot do it;
+          // SeeIt.html?webgl forces the plain path, for comparing the two.
+          gi: !/[?&]webgl(=|&|$)/.test(window.location.search),
           textures: DATA.colorImages
         });
       }).then(function (v) {
