@@ -544,10 +544,10 @@ export async function createViewer(mount, options = {}) {
   // A bathroom with the product set into it.
   //
   // The alcove is a rectangular recess in a flat wall. Everything at the mouth
-  // stands on one plane, z = 0: the wall either side of the opening, the wall
-  // above its head, and the lip that laps the panel. That is what a tiled
-  // alcove looks like, and it is why the niche reads as cut into something
-  // rather than as the end of a corridor.
+  // stands on one plane, z = 0: the wall either side of the opening, and the
+  // face of the return that laps the panel. That is what a tiled alcove looks
+  // like, and it is why the niche reads as cut into something rather than as
+  // the end of a corridor.
   //
   // The recess runs floor to ceiling. A tub alcove is the gap between two
   // partition walls, not a hole with a lintel over it, so there is no head and
@@ -568,7 +568,6 @@ export async function createViewer(mount, options = {}) {
     const z1 = roomFront(w);
     frontZ = z1;
     const midX = (x0 + x1) / 2;
-    const midZ = (z0 + z1) / 2;
     const fw = x1 - x0;
     const fd = z1 - zBack;
 
@@ -587,7 +586,7 @@ export async function createViewer(mount, options = {}) {
     room.add(ceiling);
 
     // ── The recess ───────────────────────────────────────────────────
-    const nicheD = z0 - zBack + d;          // opening depth plus the bay
+    const nicheD = -zBack;        // the mouth plane to the back of the recess
 
     const back = new THREE.Mesh(
       new THREE.PlaneGeometry(corner ? fw : w, ROOM_H), roomMat);
@@ -622,28 +621,27 @@ export async function createViewer(mount, options = {}) {
         room.add(b);
       }
 
-      // ── The lip that laps the panel ─────────────────────────────────
-      // A return of the wall, OVERLAP deep, reaching LIP_T inboard so that the
-      // outer inch of the panel's front is behind it. Only where there is a
-      // flange to cover: a Glue-Up panel is finished to its edge and a lip over
-      // it would be hiding the product.
+      // ── The return that laps the panel ──────────────────────────────
+      // The wall brought over the flange: OVERLAP deep, reaching LIP_T inboard
+      // of the opening line so the outer inch of the panel's front is behind
+      // it. Only where there is a flange to cover: a Glue-Up panel is finished
+      // to its edge and a return over it would be hiding the product.
+      //
+      // A box, not a pair of planes. It needs a face on z = 0 as well as the
+      // one facing inboard, because that front face is what makes it read as
+      // wall laid over the flange. Built from planes it had no front, so on a
+      // single-sided material you looked straight past it to the face an inch
+      // back and the lap read as a notch cut into the wall. It starts SKIN
+      // outboard of the opening line, against the side of the recess, so there
+      // is no hairline where the two meet.
       if (flanged) {
         for (const inward of [1, -1]) {
-          const x = inward * (-(w / 2) + LIP_T);
-          const lip = new THREE.Mesh(
-            new THREE.PlaneGeometry(OVERLAP, ROOM_H), roomMat);
-          lip.rotation.y = inward * Math.PI / 2;
-          lip.position.set(x, ROOM_H / 2, -OVERLAP / 2);
-          lip.receiveShadow = true;
-          room.add(lip);
-
-          // The return's own thickness, seen when looking along the wall.
-          const edge = new THREE.Mesh(
-            new THREE.PlaneGeometry(LIP_T + SKIN, ROOM_H), roomMat);
-          edge.position.set(inward * (-(w / 2) + (LIP_T + SKIN) / 2),
-                            ROOM_H / 2, -OVERLAP);
-          edge.receiveShadow = true;
-          room.add(edge);
+          const lap = new THREE.Mesh(
+            new THREE.BoxGeometry(LIP_T + SKIN, ROOM_H, OVERLAP), roomMat);
+          lap.position.set(inward * (-(w / 2) + (LIP_T - SKIN) / 2),
+                           ROOM_H / 2, -OVERLAP / 2);
+          lap.receiveShadow = true;
+          room.add(lap);
         }
       }
     }
@@ -720,9 +718,10 @@ export async function createViewer(mount, options = {}) {
     // Does this build have a flange to cover? It is the surround that decides:
     // the apron is measured from the surround's front, and a Glue-Up panel is
     // bonded on with no flange at all. With no surround chosen, fall back to
-    // the base's own flag.
+    // the base's own flag — and with neither chosen there is nothing to lap, so
+    // the empty alcove every visitor opens on gets no return at its mouth.
     const flanged = wall ? wall.flange !== false
-                         : (f ? f.flange !== false : true);
+                         : !!f && f.flange !== false;
 
     let rim = 0;
     let top = 40;
@@ -730,11 +729,14 @@ export async function createViewer(mount, options = {}) {
     if (f) {
       const nominal = f.box[2] || NOMINAL_H[f.sits] || 19;
       const mat = finish(f.color);
+      // The apron's front. One number, so the seat below lands with the base
+      // whichever way the base was drawn.
+      const baseFront = flanged ? -APRON_BACK : 0;
       const made = await piece(f, w, d, () => ({
         obj: vessel(f.box[0] || w, f.box[1] || d, nominal,
                     build.shape === 'corner'),
         h: nominal
-      }), flanged ? -APRON_BACK : 0);
+      }), baseFront);
       // The rim is wherever the piece actually ends, not where the nominal
       // size says it should. The exported base is a shade over 4 in. tall
       // against a 3-1/2 in. nominal, and the surround has to meet it.
@@ -746,14 +748,19 @@ export async function createViewer(mount, options = {}) {
       // A seated base closes one end off at the rim. The seat is at the drain
       // end, so it changes sides with the drain: on WBSL...R / WBSR...L the
       // workbook flips the seat letter and the drain letter together.
-      if (f.category === 'Seated Base') {
+      //
+      // Only on a shape built here. An export of a seated base has its seat
+      // moulded in, and a second one drawn over it would be the viewer
+      // arguing with the file. No seated base is exported today; this is so
+      // that the first one to be does not arrive with two seats.
+      if (f.category === 'Seated Base' && made.fromNumbers) {
         const sw = Math.min(17, w * 0.32);
         const hand = f.mirror ? 1 : -1;
         const seatGeo = rounded(sw, d - 2 * WALL_T, rim - WALL_T, 1);
         boxUV(seatGeo);                      // built here, so painted here
         const seat = new THREE.Mesh(seatGeo, mat);
         seat.position.set(hand * (w / 2 - WALL_T - sw / 2),
-                          (rim - WALL_T) / 2, -d / 2);
+                          (rim - WALL_T) / 2, -d / 2 + baseFront);
         // Both, the way paint() sets them. This mesh is built here rather than
         // inside the group, so it has to say so itself.
         seat.castShadow = seat.receiveShadow = true;
@@ -789,23 +796,31 @@ export async function createViewer(mount, options = {}) {
     return { camTop: top, flanged: flanged };
   }
 
-  // Three flat panels and a shelf, standing on y = 0. Used when the wall
-  // has no export yet.
+  // Three flat panels and a shelf, standing on y = 0, front face on z = 0.
+  // Used when the wall has no export yet.
+  //
+  // OVERLAP deeper than the opening, because that is what a real one measures:
+  // the flange stands proud of the moulding's front by that inch, and piece()
+  // lands the front of the part — flange and all — on the wall face. Built to
+  // the opening alone it stopped NICHE_EXTRA short of the framing, and since
+  // the alcove has no head, that whole bay showed as a slot above the surround.
+  // What is left behind it now is the one inch the fixings need.
   function panels(w, d, h) {
+    const t = d + OVERLAP;
     const g = new THREE.Group();
 
     const back = new THREE.Mesh(new THREE.BoxGeometry(w, h, PANEL_T), null);
-    back.position.set(0, h / 2, -d + PANEL_T / 2);
+    back.position.set(0, h / 2, -t + PANEL_T / 2);
     g.add(back);
 
     for (const s of [-1, 1]) {
-      const side = new THREE.Mesh(new THREE.BoxGeometry(PANEL_T, h, d), null);
-      side.position.set(s * (w / 2 - PANEL_T / 2), h / 2, -d / 2);
+      const side = new THREE.Mesh(new THREE.BoxGeometry(PANEL_T, h, t), null);
+      side.position.set(s * (w / 2 - PANEL_T / 2), h / 2, -t / 2);
       g.add(side);
     }
 
     const shelf = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 4.5), null);
-    shelf.position.set(w / 2 - 14, h * 0.62, -d + 2.6);
+    shelf.position.set(w / 2 - 14, h * 0.62, -t + 2.6);
     g.add(shelf);
 
     return g;
@@ -816,14 +831,18 @@ export async function createViewer(mount, options = {}) {
   // Either way the answer is the same pair: the thing, and how tall it
   // turned out, because the next piece up has to sit on it.
   // frontAt is the z the piece's front face registers on. 0 is the wall face;
-  // a base passes a little behind that. Only an export is placed this way; a
-  // generated shape is built to the opening and needs no registering.
+  // a base passes APRON_BACK behind that. Both answers are registered, the
+  // export by fit() and a generated shape by fromNumbers(): the shapes here are
+  // drawn with their front on z = 0, so it is one shift. It used to be skipped,
+  // on the grounds that a generated shape is built to the opening and needs no
+  // placing, and the effect was that the apron's stated inch of set-back
+  // applied only to the parts that happen to have been exported.
   let gltfOff = false;
   async function piece(spec, w, d, fallback, frontAt = 0) {
     const key = spec.part.split(' / ')[0];
-    if (gltfOff || !exported.has(key)) { return fallback(); }
+    if (gltfOff || !exported.has(key)) { return fromNumbers(fallback(), frontAt); }
     const url = opts.modelPath + key + '.glb';
-    if (gltfCache.get(url) === false) { return fallback(); }
+    if (gltfCache.get(url) === false) { return fromNumbers(fallback(), frontAt); }
     try {
       if (!GLTF) {
         ({ GLTFLoader: GLTF } = await import('three/addons/loaders/GLTFLoader.js'));
@@ -853,8 +872,17 @@ export async function createViewer(mount, options = {}) {
       // replaced the file: the page looks like it ignored them.
       console.warn(`seeit-3d: ${url} did not load, so ${key} is drawn from its `
                    + `workbook numbers instead.`, err);
-      return fallback();
+      return fromNumbers(fallback(), frontAt);
     }
+  }
+
+  // Register a shape drawn from the workbook numbers on the same front line an
+  // export lands on, and mark it as one, which is how drawParts() knows whether
+  // a detail is already in the file.
+  function fromNumbers(res, frontAt) {
+    res.obj.position.z += frontAt;
+    res.fromNumbers = true;
+    return res;
   }
 
   // Sit an export in the opening. The export is Y up, the way glTF says:
@@ -1077,8 +1105,8 @@ export async function createViewer(mount, options = {}) {
       if (!alive || build !== next) { return; }
       const w = next.opening.w || 60;
       const d = next.opening.d || 32;
-      // Parts before the room, because the pocket behind them has to stop at
-      // the top of the installation and only drawParts() knows where that is.
+      // Parts before the room, because whether the wall returns over a flange
+      // at the mouth is the build's business, and only drawParts() knows it.
       // Neither depends on the other's geometry, only on the opening.
       const built = await drawParts();
       if (!alive || build !== next) { return; }
