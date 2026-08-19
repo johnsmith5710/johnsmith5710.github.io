@@ -67,10 +67,11 @@ const APRON_BACK = 1;
 // is, and two surfaces at the same depth flicker against each other.
 const SKIN = 0.03;
 
-// How far inboard the lip at the mouth reaches, which has to clear a panel to
-// cover its edge. A hair past the panel's inner face, so the two are never
-// exactly coplanar.
-const LIP_T = PANEL_T + SKIN;
+// How far inboard the return at the mouth reaches. It has to clear the panel
+// to cover its edge, so it is at least PANEL_T, but how much further it comes
+// is a matter of how the wall was finished rather than of the panel: this is
+// set by eye against the drawing, not derived. It must stay above PANEL_T.
+const LIP_T = 1.5;
 
 // How much product one colour tile covers. Every textured surface carries
 // UVs measured in inches, so this one number sets the density everywhere.
@@ -103,6 +104,12 @@ export async function createViewer(mount, options = {}) {
     roomPath: '../rooms/',       // where a room export lives
     rooms: [],                   // [{ id, file, unit }], see roomList below
     textures: {},                // color name -> image url
+    // Development only. Lets the camera off its leash: all the way round, all
+    // the way in and out, through the walls, and shift-drag to slide the point
+    // it is looking at. Useful for checking a flange cover or the back of a
+    // niche, useless to a customer, so the page turns it on from ?freecam
+    // rather than shipping it in the interface.
+    freeRoam: false,
     onReady: null
   }, options);
 
@@ -240,7 +247,11 @@ export async function createViewer(mount, options = {}) {
   // Only three degrees of freedom are wanted, and all of them are clamped
   // so the camera stays in the room and in front of the alcove.
   const orbit = { r: 150, theta: 0, phi: 1.16, target: new THREE.Vector3() };
-  const LIMIT = { theta: 0.62, phiLo: 0.62, phiHi: 1.52, rLo: 0.55, rHi: 1.7 };
+  // Normally three tightly clamped degrees of freedom, so the camera stays in
+  // the room and in front of the alcove. Free roam replaces the lot.
+  const LIMIT = opts.freeRoam
+    ? { theta: Math.PI, phiLo: 0.02, phiHi: Math.PI - 0.02, rLo: 0.02, rHi: 40 }
+    : { theta: 0.62, phiLo: 0.62, phiHi: 1.52, rLo: 0.55, rHi: 1.7 };
   let rBase = 150;
 
   // How far forward the room reaches. The camera has to stay behind it: the
@@ -254,7 +265,7 @@ export async function createViewer(mount, options = {}) {
     // Pull in far enough to stay inside, rather than making the room long
     // enough to never be left. A bathroom is not 20 ft deep.
     let r = orbit.r;
-    if (out > 0.05 && frontZ !== Infinity) {
+    if (!opts.freeRoam && out > 0.05 && frontZ !== Infinity) {
       r = Math.min(r, Math.max(24, (frontZ - 8 - target.z) / out));
     }
     camera.position.set(
@@ -312,6 +323,22 @@ export async function createViewer(mount, options = {}) {
       return;
     }
 
+    // Free roam only: shift-drag slides the point the camera looks at, across
+    // the screen rather than through the world, which is what makes it feel
+    // like moving about rather than orbiting a fixed spot.
+    if (opts.freeRoam && e.shiftKey) {
+      camera.updateMatrixWorld();
+      const k = orbit.r * 0.0016;
+      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+      const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+      orbit.target
+        .addScaledVector(right, -(e.clientX - prev.x) * k)
+        .addScaledVector(up, (e.clientY - prev.y) * k);
+      place();
+      render();
+      return;
+    }
+
     orbit.theta = clamp(orbit.theta - (e.clientX - prev.x) * 0.006,
                         -LIMIT.theta, LIMIT.theta);
     orbit.phi = clamp(orbit.phi - (e.clientY - prev.y) * 0.005,
@@ -362,7 +389,8 @@ export async function createViewer(mount, options = {}) {
   el.setAttribute('aria-label',
     'Your bathroom, drawn. Drag or use the arrow keys to turn it, ' +
     'and the plus and minus keys to zoom. What is in it is written ' +
-    'under the picture.');
+    'under the picture.' +
+    (opts.freeRoam ? ' Free roam is on: shift-drag to move about.' : ''));
   el.addEventListener('keydown', (e) => {
     const step = 0.09;
     // Zoom first: these two already clamp and redraw themselves.
@@ -445,14 +473,14 @@ export async function createViewer(mount, options = {}) {
   // A named room is tried first and the plain alcove stands in whenever one
   // is not asked for, is not on offer, or does not load. The room is only
   // ever scenery, so nothing about the products depends on which one it is.
-  async function drawRoom(w, d, want, corner, headY, flanged) {
+  async function drawRoom(w, d, want, corner, flanged) {
     clear(room);
     const made = want ? await roomModel(want, d) : null;
     if (made) {
       room.add(made);
       return;
     }
-    plainRoom(w, d, corner, headY, flanged);
+    plainRoom(w, d, corner, flanged);
   }
 
   const roomCache = new Map();
@@ -521,13 +549,17 @@ export async function createViewer(mount, options = {}) {
   // alcove looks like, and it is why the niche reads as cut into something
   // rather than as the end of a corridor.
   //
-  // headY is where the top of the recess is, already dropped by OVERLAP so the
-  // wall crosses the panel's top edge. flanged says whether there is a flange
-  // to cover at all; a Glue-Up panel is bonded on and has none.
+  // The recess runs floor to ceiling. A tub alcove is the gap between two
+  // partition walls, not a hole with a lintel over it, so there is no head and
+  // no soffit: above the surround you are looking at the back of the recess,
+  // which is where the top flange beds.
+  //
+  // flanged says whether there is a flange to cover at all; a Glue-Up panel is
+  // bonded on and has none.
   //
   // A corner unit is not in a recess. Two of the room's own walls meet behind
-  // it and the floor opens out to one side, so it gets no lip and no head.
-  function plainRoom(w, d, corner, headY, flanged) {
+  // it and the floor opens out to one side, so it gets no return.
+  function plainRoom(w, d, corner, flanged) {
     const jamb = corner ? 0 : JAMB_W;
     const x0 = corner ? -w / 2 : -w / 2 - jamb;
     const x1 = corner ? -w / 2 + w + CORNER_OPEN : w / 2 + jamb;
@@ -539,7 +571,6 @@ export async function createViewer(mount, options = {}) {
     const midZ = (z0 + z1) / 2;
     const fw = x1 - x0;
     const fd = z1 - zBack;
-    const head = Math.min(ROOM_H, Math.max(1, headY || ROOM_H));
 
     // Floor and ceiling over the whole plan. What falls inside the wall is
     // hidden by it, so there is nothing to cut out.
@@ -559,43 +590,24 @@ export async function createViewer(mount, options = {}) {
     const nicheD = z0 - zBack + d;          // opening depth plus the bay
 
     const back = new THREE.Mesh(
-      new THREE.PlaneGeometry(corner ? fw : w, corner ? ROOM_H : head), roomMat);
-    back.position.set(corner ? midX : 0, corner ? ROOM_H / 2 : head / 2, zBack);
+      new THREE.PlaneGeometry(corner ? fw : w, ROOM_H), roomMat);
+    back.position.set(corner ? midX : 0, ROOM_H / 2, zBack);
     back.receiveShadow = true;
     room.add(back);
 
     if (jamb > 0) {
-      // The two sides of the recess, on the opening line, stopping at its head.
+      // The two sides of the recess, on the opening line, full height.
       for (const inward of [1, -1]) {
         const side = new THREE.Mesh(
-          new THREE.PlaneGeometry(nicheD, head), roomMat);
+          new THREE.PlaneGeometry(nicheD, ROOM_H), roomMat);
         side.rotation.y = inward * Math.PI / 2;
-        side.position.set(inward * (-(w / 2) - SKIN), head / 2,
+        side.position.set(inward * (-(w / 2) - SKIN), ROOM_H / 2,
                           zBack + nicheD / 2);
         side.receiveShadow = true;
         room.add(side);
       }
 
-      // The head of the recess, facing down. It laps the panel's top edge,
-      // because head was already dropped by OVERLAP.
-      const soffit = new THREE.Mesh(
-        new THREE.PlaneGeometry(w, nicheD), roomMat);
-      soffit.rotation.x = Math.PI / 2;
-      soffit.position.set(0, head, zBack + nicheD / 2);
-      soffit.receiveShadow = true;
-      room.add(soffit);
-
       // ── The wall the recess is cut into, all of it on z = 0 ─────────
-      // Above the head.
-      if (head < ROOM_H) {
-        const over = new THREE.Mesh(
-          new THREE.PlaneGeometry(w, ROOM_H - head), roomMat);
-        over.position.set(0, head + (ROOM_H - head) / 2, 0);
-        over.receiveShadow = true;
-        room.add(over);
-      }
-
-      // Either side of it.
       for (const inward of [1, -1]) {
         const face = new THREE.Mesh(
           new THREE.PlaneGeometry(jamb, ROOM_H), roomMat);
@@ -619,17 +631,17 @@ export async function createViewer(mount, options = {}) {
         for (const inward of [1, -1]) {
           const x = inward * (-(w / 2) + LIP_T);
           const lip = new THREE.Mesh(
-            new THREE.PlaneGeometry(OVERLAP, head), roomMat);
+            new THREE.PlaneGeometry(OVERLAP, ROOM_H), roomMat);
           lip.rotation.y = inward * Math.PI / 2;
-          lip.position.set(x, head / 2, -OVERLAP / 2);
+          lip.position.set(x, ROOM_H / 2, -OVERLAP / 2);
           lip.receiveShadow = true;
           room.add(lip);
 
-          // The lip's own thickness, seen when looking along the wall.
+          // The return's own thickness, seen when looking along the wall.
           const edge = new THREE.Mesh(
-            new THREE.PlaneGeometry(LIP_T + SKIN, head), roomMat);
-          edge.position.set(inward * (-(w / 2) + (LIP_T + SKIN) / 2), head / 2,
-                            -OVERLAP);
+            new THREE.PlaneGeometry(LIP_T + SKIN, ROOM_H), roomMat);
+          edge.position.set(inward * (-(w / 2) + (LIP_T + SKIN) / 2),
+                            ROOM_H / 2, -OVERLAP);
           edge.receiveShadow = true;
           room.add(edge);
         }
@@ -694,13 +706,11 @@ export async function createViewer(mount, options = {}) {
   }
 
   // ── Build the products ─────────────────────────────────────────────
-  // Answers with what the room needs to know. camTop is what the camera has to
-  // take in. headY is where the recess is closed off, already dropped by
-  // OVERLAP so the wall laps the panel's top edge. flanged says whether there
-  // is a flange to cover at all.
+  // Answers with what the room needs to know: how high the camera has to reach,
+  // and whether there is a flange for the wall to lap.
   async function drawParts() {
     clear(parts);
-    if (!build) { return { camTop: 40, headY: ROOM_H, flanged: false }; }
+    if (!build) { return { camTop: 40, flanged: false }; }
 
     const w = build.opening.w;
     const d = build.opening.d;
@@ -776,16 +786,7 @@ export async function createViewer(mount, options = {}) {
 
     // frame() is called by update() once the room is up, because it moves the
     // camera and the camera is clamped against the room's front edge.
-    //
-    // headY is where the recess is closed off. It is OVERLAP below the top of
-    // what is installed, so the wall crosses the panel's top edge instead of
-    // stopping level with it. Full height when nothing is installed: there is
-    // no panel to lap and no reason to close the recess early.
-    return {
-      camTop: top,
-      headY: (f || wall) ? Math.max(1, top - (flanged ? OVERLAP : 0)) : ROOM_H,
-      flanged: flanged
-    };
+    return { camTop: top, flanged: flanged };
   }
 
   // Three flat panels and a shelf, standing on y = 0. Used when the wall
@@ -1081,8 +1082,7 @@ export async function createViewer(mount, options = {}) {
       // Neither depends on the other's geometry, only on the opening.
       const built = await drawParts();
       if (!alive || build !== next) { return; }
-      await drawRoom(w, d, next.room, next.shape === 'corner',
-                     built.headY, built.flanged);
+      await drawRoom(w, d, next.room, next.shape === 'corner', built.flanged);
       if (!alive) { return; }
       // Last, because it moves the camera and the camera is clamped against
       // the room's front edge, which drawRoom has just set.

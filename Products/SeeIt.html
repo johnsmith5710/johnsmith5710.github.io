@@ -906,6 +906,10 @@
           models: DATA.models,
           roomPath: '../rooms/',
           rooms: DATA.rooms,
+          // Development only, and off unless it is asked for by name in the
+          // address bar: SeeIt.html?freecam. Nothing in the interface turns it
+          // on, so a customer cannot find it, and it costs nothing to leave in.
+          freeRoam: /[?&]freecam(=|&|$)/.test(window.location.search),
           textures: DATA.colorImages
         });
       }).then(function (v) {
