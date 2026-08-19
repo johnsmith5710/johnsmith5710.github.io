@@ -163,16 +163,17 @@ export async function createViewer(mount, options = {}) {
 
   if (opts.gi && typeof navigator !== 'undefined' && navigator.gpu) {
     try {
-      const [gpu, tsl, node] = await Promise.all([
+      const [gpu, tsl, node, aa] = await Promise.all([
         import('three/webgpu'),
         import('three/tsl'),
-        import('three/addons/tsl/display/SSGINode.js')
+        import('three/addons/tsl/display/SSGINode.js'),
+        import('three/addons/tsl/display/TRAANode.js')
       ]);
       renderer = new gpu.WebGPURenderer({ antialias: true, alpha: false });
       // Asynchronous, unlike the WebGL one. Everything here waits on it,
       // because a render before the device is up draws nothing at all.
       await renderer.init();
-      nodes = { gpu, tsl, ssgi: node.ssgi };
+      nodes = { gpu, tsl, ssgi: node.ssgi, traa: aa.traa };
     } catch (err) {
       // Any failure at all is a fallback, not an error: an old browser, a
       // driver that will not give up a device, a file that did not deploy.
@@ -478,6 +479,85 @@ export async function createViewer(mount, options = {}) {
     render();
   });
 
+  // ── Indirect lighting ──────────────────────────────────────────────
+  // Built once, around the scene and the camera, and then left alone: the node
+  // graph does not care that the scene is torn down and rebuilt between
+  // answers, because the pass reads whatever is in the scene at render time.
+  //
+  // The scene is drawn to three targets at once instead of straight to the
+  // canvas — colour, the diffuse colour before lighting, and the view-space
+  // normal — because SSGI needs to know what each pixel is made of before it
+  // can work out what light it should be bouncing. Depth comes free with the
+  // pass. Then the composite: colour attenuated by the occlusion term, plus the
+  // surface's own diffuse lit by the gathered indirect light.
+  //
+  // This is the arrangement from the three.js example, kept whole. The first
+  // attempt dropped the velocity target and the temporal antialiasing on the
+  // grounds that both exist to spread cost across frames and this viewer draws
+  // one frame and stops. That was the wrong conclusion from a true premise, and
+  // it produced exactly two complaints: grainy, and slow.
+  //
+  // SSGINode holds no history of its own — it has one render target, for AO and
+  // GI, and nothing to accumulate into. Its useTemporalFiltering only rotates
+  // the sample pattern per frame: frameId % 6 picks the direction and
+  // frameId % 4 the offset. Turn it off and every frame takes the same 24 or 96
+  // samples in the same places, so the noise is identical each time and reads as
+  // fixed grain. The averaging is TRAANode's job, which is where the history
+  // buffer lives, and that is why the example pipes one into the other.
+  //
+  // So the samples are spread across frames after all, and what this viewer has
+  // to add is somewhere for them to land: render() asks for a run of frames
+  // rather than one, and then stops. See SETTLE.
+  let pipeline = null;
+  if (nodes) {
+    const T = nodes.tsl;
+    pipeline = new nodes.gpu.RenderPipeline(renderer);
+
+    const scenePass = T.pass(scene, camera);
+    scenePass.setMRT(T.mrt({
+      output: T.output,
+      diffuseColor: T.diffuseColor,
+      normal: T.packNormalToRGB(T.normalView),
+      velocity: T.velocity
+    }));
+
+    const colour = scenePass.getTextureNode('output');
+    const diffuse = scenePass.getTextureNode('diffuseColor');
+    const depth = scenePass.getTextureNode('depth');
+    const packed = scenePass.getTextureNode('normal');
+    const motion = scenePass.getTextureNode('velocity');
+
+    // A byte per channel is enough for a colour and for a packed normal, and
+    // halves what these two targets cost to write and read back.
+    scenePass.getTexture('diffuseColor').type = THREE.UnsignedByteType;
+    scenePass.getTexture('normal').type = THREE.UnsignedByteType;
+
+    const normal = T.sample((uv) => T.unpackRGBToNormal(packed.sample(uv)));
+
+    // SSGINode's Medium preset for the temporal-filtering column of its own
+    // documented presets: 2 slices of 8 steps, 32 samples a pixel. A third of
+    // what the first attempt asked of every frame, which is the other half of
+    // the fix — the frames are cheap and there are more of them, instead of one
+    // expensive frame that still looked rough.
+    //
+    // Their numbers, not a guess of mine. If it shimmers rather than settles,
+    // the file says to raise sliceCount before stepCount.
+    const gi = nodes.ssgi(colour, depth, normal, camera);
+    gi.sliceCount.value = 2;
+    gi.stepCount.value = 8;
+    gi.useTemporalFiltering = true;
+
+    const composite = T.vec4(
+      T.add(colour.rgb.mul(gi.getAONode().r),
+            diffuse.rgb.mul(gi.getGINode().rgb)),
+      colour.a);
+
+    // The history buffer. It reprojects the last frame with the velocity target
+    // and folds this one into it, so a still camera converges and a moving one
+    // is corrected rather than smeared.
+    pipeline.outputNode = nodes.traa(composite, depth, motion, camera);
+  }
+
   // ── Size ───────────────────────────────────────────────────────────
   // The shape of the box is the stylesheet's business. This reads it rather
   // than imposing a ratio of its own: the two disagreed — 0.72 here against
@@ -497,7 +577,15 @@ export async function createViewer(mount, options = {}) {
     // Decided here, not once at startup: turning a phone to landscape can
     // cross this line in either direction. Only set when it changes, because
     // setPixelRatio reallocates the drawing buffer.
-    const cap = w < 700 ? 1.5 : 2;
+    //
+    // Lower with indirect lighting, because there the cost is per pixel and it
+    // is paid SETTLE times over rather than once: 32 samples a pixel, five
+    // targets to write, twelve frames. Going from 2 to 1.5 is 44% fewer pixels
+    // in all of that, and it is the cheapest thing available — the alternative
+    // is fewer samples, which is what the picture is made of. A gelcoat panel is
+    // a broad flat surface with little fine detail to lose to it.
+    const ceiling = pipeline ? 1.5 : 2;
+    const cap = w < 700 ? Math.min(1.5, ceiling) : ceiling;
     if (cap !== prCap) {
       prCap = cap;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cap));
@@ -511,81 +599,41 @@ export async function createViewer(mount, options = {}) {
   const ro = new ResizeObserver(resize);
   ro.observe(mount);
 
-  // ── Indirect lighting ──────────────────────────────────────────────
-  // Built once, around the scene and the camera, and then left alone: the node
-  // graph does not care that the scene is torn down and rebuilt between
-  // answers, because the pass reads whatever is in the scene at render time.
-  //
-  // The scene is drawn to three targets at once instead of straight to the
-  // canvas — colour, the diffuse colour before lighting, and the view-space
-  // normal — because SSGI needs to know what each pixel is made of before it
-  // can work out what light it should be bouncing. Depth comes free with the
-  // pass. Then the composite: colour attenuated by the occlusion term, plus the
-  // surface's own diffuse lit by the gathered indirect light.
-  //
-  // This is the arrangement from the three.js example, less the parts a product
-  // viewer has no use for: no velocity target and no temporal antialiasing,
-  // because both exist to spread cost across frames and this viewer draws one
-  // frame and then stops. Temporal filtering is off for the same reason — with
-  // nothing accumulating between frames it would only ever show its first,
-  // noisiest estimate. The sample counts are raised instead, which a viewer that
-  // renders on demand can afford and a game cannot.
-  let pipeline = null;
-  if (nodes) {
-    const T = nodes.tsl;
-    pipeline = new nodes.gpu.RenderPipeline(renderer);
-
-    const scenePass = T.pass(scene, camera);
-    scenePass.setMRT(T.mrt({
-      output: T.output,
-      diffuseColor: T.diffuseColor,
-      normal: T.packNormalToRGB(T.normalView)
-    }));
-
-    const colour = scenePass.getTextureNode('output');
-    const diffuse = scenePass.getTextureNode('diffuseColor');
-    const depth = scenePass.getTextureNode('depth');
-    const packed = scenePass.getTextureNode('normal');
-
-    // A byte per channel is enough for a colour and for a packed normal, and
-    // halves what these two targets cost to write and read back.
-    scenePass.getTexture('diffuseColor').type = THREE.UnsignedByteType;
-    scenePass.getTexture('normal').type = THREE.UnsignedByteType;
-
-    const normal = T.sample((uv) => T.unpackRGBToNormal(packed.sample(uv)));
-
-    // SSGINode's own documented High preset for the no-temporal-filtering case,
-    // which is the case this viewer is in: 4 slices of 12 steps, 96 samples a
-    // pixel. Their numbers, not a guess of mine — the presets are listed in the
-    // file, and they are given separately for filtered and unfiltered because
-    // the unfiltered one has to stand on its own in a single frame.
-    const gi = nodes.ssgi(colour, depth, normal, camera);
-    gi.sliceCount.value = 4;
-    gi.stepCount.value = 12;
-    gi.useTemporalFiltering = false;
-
-    pipeline.outputNode = T.vec4(
-      T.add(colour.rgb.mul(gi.getAONode().r),
-            diffuse.rgb.mul(gi.getGINode().rgb)),
-      colour.a);
-  }
-
   // ── Draw only when something changed ───────────────────────────────
   // Demand-driven: no continuous rAF while idle. Saves battery on mobile
   // and drops CPU to near zero when the user is reading the build list.
+  // On the plain path one frame is the whole picture, so a change draws once and
+  // the loop stops. With indirect lighting a frame is one estimate out of a
+  // rotating sequence, and the history buffer needs the sequence: SSGINode picks
+  // its sample direction by frameId % 6 and its offset by frameId % 4, so every
+  // pattern in the cycle has been drawn after lcm(6, 4) = 12 consecutive frames.
+  // Twelve is therefore not a number chosen by eye — it is the length of the
+  // cycle, and stopping earlier would leave part of the pattern unsampled and
+  // the rest showing through as noise.
+  //
+  // A fifth of a second of drawing after each change, then idle at nothing. That
+  // is the trade this viewer can make and a game cannot.
+  const SETTLE = pipeline ? 12 : 1;
+  let settle = 0;
   let raf = 0;
+
   function tick() {
     raf = 0;
     if (!alive || document.hidden) { return; }
-    if (dirty) {
-      dirty = false;
-      // The pipeline renders the scene itself, through the pass it was built
-      // around, so it is one call or the other and never both.
-      if (pipeline) { pipeline.render(); } else { renderer.render(scene, camera); }
-    }
+    if (!dirty && settle <= 0) { return; }
+    dirty = false;
+    if (settle > 0) { settle -= 1; }
+    // The pipeline renders the scene itself, through the pass it was built
+    // around, so it is one call or the other and never both.
+    if (pipeline) { pipeline.render(); } else { renderer.render(scene, camera); }
+    // Only while there is still sequence left to draw. Idle costs nothing on
+    // either path.
+    if (settle > 0) { raf = requestAnimationFrame(tick); }
   }
+
   function render() {
     dirty = true;
+    settle = SETTLE;
     if (alive && !document.hidden && !raf) {
       raf = requestAnimationFrame(tick);
     }

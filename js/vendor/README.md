@@ -13,6 +13,7 @@ mix releases: the core and the addons share private symbols.
 | `addons/utils/BufferGeometryUtils.js` | `examples/jsm/utils/BufferGeometryUtils.js` | 37,621 |
 | `addons/utils/SkeletonUtils.js` | `examples/jsm/utils/SkeletonUtils.js` | 11,535 |
 | `addons/tsl/display/SSGINode.js` | `examples/jsm/tsl/display/SSGINode.js` | 22,471 |
+| `addons/tsl/display/TRAANode.js` | `examples/jsm/tsl/display/TRAANode.js` | 21,820 |
 
 Fetch a file from `https://unpkg.com/three@0.185.1/<upstream path>`.
 
@@ -60,10 +61,40 @@ renderers. The node half is loaded by `import()` at the point of use, so a
 visitor on the plain path never requests those 700 KB. `SeeIt.html?webgl`
 forces the plain path, for comparing the two pictures.
 
-Settings come from `SSGINode.js`'s own documented presets. It lists them
-separately for temporal filtering on and off, and this viewer draws one frame
-and stops, so filtering is off and the numbers are that column's High: 4 slices
-of 12 steps, 96 samples a pixel.
+### SSGINode cannot clean up after itself. Keep TRAANode with it.
+
+This is the part worth reading before changing any of the settings, because it
+was got wrong once and the symptoms were "grainy" and "low frame rate".
+
+**`SSGINode` holds no history buffer.** It has one render target, for AO and GI,
+and nothing to accumulate into. Its `useTemporalFiltering` does not filter over
+time — it rotates the sample pattern per frame, `frameId % 6` choosing the
+direction and `frameId % 4` the offset. So:
+
+- Off: every frame samples the same places, and the noise is identical each
+  time. It reads as fixed grain, and no number of samples per frame removes it.
+- On, with nothing averaging the frames: the noise moves instead, which is
+  worse.
+
+The averaging is **`TRAANode`**, which is where the history buffer actually is.
+That is why the three.js example pipes one into the other, and why both are
+vendored here. It needs the `velocity` target, so the scene pass writes four.
+
+Two consequences for a viewer that draws on demand:
+
+- **A change has to draw a run of frames, not one.** `SETTLE` in
+  `js/seeit-3d.js` is 12, which is `lcm(6, 4)` — the length of that sample
+  cycle. Stopping earlier leaves part of the pattern undrawn and the rest
+  showing through. About a fifth of a second, then idle at nothing.
+- **Per-frame cost is what matters**, because it is paid twelve times. Settings
+  are `SSGINode`'s own documented Medium for the filtering-on column: 2 slices
+  of 8 steps, 32 samples a frame. The file lists presets for filtering on and
+  off separately; use the right column. If it shimmers rather than settles, it
+  says to raise `sliceCount` before `stepCount`.
+
+The pixel ratio is also capped at 1.5 instead of 2 on this path, for the same
+reason: 44% fewer pixels through all twelve frames, and a gelcoat panel is a
+broad flat surface with little fine detail to lose.
 
 ## Gaussian splats were tried, and removed
 
@@ -133,7 +164,7 @@ Two checks, in this order. The second one is the one that matters.
    every name that is imported from it. **Follow `import()` as well as
    `import`**: the node half is only ever reached dynamically, so a walk of
    static imports alone would report a clean graph while none of it was
-   checked. Nine modules must resolve:
+   checked. Ten modules must resolve:
 
    ```
    js/seeit-3d.js
@@ -142,6 +173,7 @@ Two checks, in this order. The second one is the one that matters.
    js/vendor/three.webgpu.min.js
    js/vendor/three.tsl.js
    js/vendor/addons/tsl/display/SSGINode.js
+   js/vendor/addons/tsl/display/TRAANode.js
    js/vendor/addons/loaders/GLTFLoader.js
    js/vendor/addons/utils/BufferGeometryUtils.js
    js/vendor/addons/utils/SkeletonUtils.js
